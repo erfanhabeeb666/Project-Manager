@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+
+    <!-- Load properties -->
+    <property resource="application.properties"/>
+    <property name="LOG_PATH" value="${LOG_PATH:-./logs}" />
+    <property name="LOG_FILE_NAME" value="${LOG_FILE_NAME:-projectManager.log}" />
+
+    <!-- =======================
+         CONSOLE APPENDER (Colored)
+         ======================= -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- ANSI color coding for different log levels -->
+            <pattern>
+                %d{yyyy-MM-dd HH:mm:ss.SSS}
+                [%thread]
+                %highlight(%-5level)
+                %cyan(%logger{36}) -
+                %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- =======================
+         FILE APPENDER (All Logs)
+         ======================= -->
+    <appender name="FILE_ALL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE_NAME}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/${LOG_FILE_NAME}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- =======================
+         FILE APPENDER (Error Only)
+         ======================= -->
+    <appender name="FILE_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/error-${LOG_FILE_NAME}</file>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/error-${LOG_FILE_NAME}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- =======================
+         LOGGING LEVELS
+         ======================= -->
+    <!-- Your own packages -->
+    <logger name="com.RizSafProjectManager.ProjectManager" level="DEBUG"/>
+
+    <!-- Reduce noise -->
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.hibernate" level="WARN"/>
+
+    <!-- =======================
+         ROOT LOGGER
+         ======================= -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE_ALL" />
+        <appender-ref ref="FILE_ERROR" />
+    </root>
+
+</configuration>
