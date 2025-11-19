@@ -17,7 +17,7 @@ public class ProjectResponseDto {
     private LocalDate expectedEndDate;
     private LocalDate actualEndDate;
     private String stage;
-    private Long createdById;
+    private String createdById;
     private Instant createdAt;
     private List<ProjectActionDto> actions;
 }

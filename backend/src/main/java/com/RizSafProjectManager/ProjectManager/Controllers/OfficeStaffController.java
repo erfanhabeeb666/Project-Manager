@@ -97,10 +97,29 @@ public class OfficeStaffController {
     }
     @GetMapping("/actions")
     public ResponseEntity<ApiResponse<List<ProjectActionDto>>> getActionsByDate(
-            @RequestParam Optional<String> date) {
+            @RequestParam Optional<String> date,
+            @RequestParam Optional<String> fromDate,
+            @RequestParam Optional<String> toDate) {
 
-        LocalDate d = date.map(LocalDate::parse).orElse(LocalDate.now());
-        var actions = projectService.findActionsByDate(d);
+        List<ProjectActionDto> actions;
+        
+        // If both fromDate and toDate are provided, use date range
+        if (fromDate.isPresent() && toDate.isPresent()) {
+            LocalDate from = LocalDate.parse(fromDate.get());
+            LocalDate to = LocalDate.parse(toDate.get());
+            actions = projectService.findActionsBetween(from, to);
+        } 
+        // If only date is provided (for backward compatibility), use single date
+        else if (date.isPresent()) {
+            LocalDate d = LocalDate.parse(date.get());
+            actions = projectService.findActionsByDate(d);
+        } 
+        // Default to today if no parameters provided
+        else {
+            LocalDate today = LocalDate.now();
+            actions = projectService.findActionsByDate(today);
+        }
+        
         return ResponseEntity.ok(ApiResponse.<List<ProjectActionDto>>builder()
                 .success(true).message("Actions fetched").data(actions).build());
     }

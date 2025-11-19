@@ -54,14 +54,24 @@ const AdminOfficeStaff = () => {
             </li>
              <li>
               <NavLink to="/admin/office-staff" className="sidebar-link">
-                <i className="fas fa-tachometer-alt"></i> Office Staff
+                <i className="fas fa-users"></i> Office Staff
               </NavLink>
             </li>
             <li>
                           <NavLink to="/admin/worker" className="sidebar-link">
-                            <i className="fas fa-tachometer-alt"></i> Workers
+                            <i className="fas fa-hard-hat"></i> Workers
                           </NavLink>
                         </li>
+            <li>
+              <NavLink to="/admin/projects" className="sidebar-link">
+                <i className="fas fa-project-diagram"></i> Projects
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/admin/actions" className="sidebar-link">
+                <i className="fas fa-list"></i> Actions
+              </NavLink>
+            </li>
           </ul>
         </nav>
       </aside>

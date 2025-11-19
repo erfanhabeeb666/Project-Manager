@@ -1,4 +1,5 @@
 package com.RizSafProjectManager.ProjectManager.Services;
+
 import com.RizSafProjectManager.ProjectManager.Dtos.*;
 import com.RizSafProjectManager.ProjectManager.Enums.ActionStatus;
 import com.RizSafProjectManager.ProjectManager.Enums.ProjectStage;
@@ -26,8 +27,8 @@ public class ProjectService {
     private final ProjectMapperImpl mapper;
 
     public ProjectService(ProjectRepository projectRepository,
-                          ProjectActionRepository actionRepository,
-                          OfficeStaffRepository staffUserRepository, ProjectMapperImpl mapper) {
+            ProjectActionRepository actionRepository,
+            OfficeStaffRepository staffUserRepository, ProjectMapperImpl mapper) {
         this.projectRepository = projectRepository;
         this.actionRepository = actionRepository;
         this.staffUserRepository = staffUserRepository;
@@ -49,8 +50,11 @@ public class ProjectService {
         Page<Project> page;
         if (stageOpt.isPresent()) {
             ProjectStage stage;
-            try { stage = ProjectStage.valueOf(stageOpt.get()); }
-            catch (Exception e) { throw new BadRequestException("Invalid stage: " + stageOpt.get()); }
+            try {
+                stage = ProjectStage.valueOf(stageOpt.get());
+            } catch (Exception e) {
+                throw new BadRequestException("Invalid stage: " + stageOpt.get());
+            }
             page = projectRepository.findAllByStage(stage, pageable);
         } else {
             page = projectRepository.findAll(pageable);
@@ -69,12 +73,18 @@ public class ProjectService {
         Project p = projectRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Project not found: " + id));
         // update allowed fields
-        if (dto.getName() != null) p.setName(dto.getName());
-        if (dto.getLsgdName() != null) p.setLsgdName(dto.getLsgdName());
-        if (dto.getWorkType() != null) p.setWorkType(WorkType.valueOf(dto.getWorkType()));
-        if (dto.getSanctionedAmount() != null) p.setSanctionedAmount(dto.getSanctionedAmount());
-        if (dto.getStartDate() != null) p.setStartDate(dto.getStartDate());
-        if (dto.getExpectedEndDate() != null) p.setExpectedEndDate(dto.getExpectedEndDate());
+        if (dto.getName() != null)
+            p.setName(dto.getName());
+        if (dto.getLsgdName() != null)
+            p.setLsgdName(dto.getLsgdName());
+        if (dto.getWorkType() != null)
+            p.setWorkType(WorkType.valueOf(dto.getWorkType()));
+        if (dto.getSanctionedAmount() != null)
+            p.setSanctionedAmount(dto.getSanctionedAmount());
+        if (dto.getStartDate() != null)
+            p.setStartDate(dto.getStartDate());
+        if (dto.getExpectedEndDate() != null)
+            p.setExpectedEndDate(dto.getExpectedEndDate());
         Project saved = projectRepository.save(p);
         return mapper.toDto(saved);
     }
@@ -96,14 +106,16 @@ public class ProjectService {
     }
 
     @Transactional
-    public ProjectActionDto updateActionStatus(Long projectId, Long actionId, ActionStatus newStatus, Long updatedById) {
+    public ProjectActionDto updateActionStatus(Long projectId, Long actionId, ActionStatus newStatus,
+            Long updatedById) {
         ProjectAction action = actionRepository.findById(actionId)
                 .orElseThrow(() -> new NotFoundException("Action not found: " + actionId));
         if (!action.getProject().getId().equals(projectId)) {
             throw new BadRequestException("Action does not belong to project");
         }
         action.setStatus(newStatus);
-        // Optionally update createdBy or keep createdBy as original creator. We'll keep createdBy unchanged.
+        // Optionally update createdBy or keep createdBy as original creator. We'll keep
+        // createdBy unchanged.
         ProjectAction saved = actionRepository.save(action);
         return mapper.actionToDto(saved);
     }
@@ -113,43 +125,49 @@ public class ProjectService {
         Project p = projectRepository.findById(projectId)
                 .orElseThrow(() -> new NotFoundException("Project not found: " + projectId));
         ProjectStage target;
-        try { target = ProjectStage.valueOf(dto.getStage()); }
-        catch (Exception e) { throw new BadRequestException("Invalid stage: " + dto.getStage()); }
+        try {
+            target = ProjectStage.valueOf(dto.getStage());
+        } catch (Exception e) {
+            throw new BadRequestException("Invalid stage: " + dto.getStage());
+        }
 
         if (p.getStage() == ProjectStage.PROJECT_CLOSED) {
             throw new BadRequestException("Cannot change stage of a closed project");
         }
+
+        ProjectStage oldStage = p.getStage();
         p.setStage(target);
 
-        if (dto.getNotes() != null && !dto.getNotes().isBlank()) {
-            var user = staffUserRepository.findById(changedById).orElse(null);
-            ProjectAction noteAction = ProjectAction.builder()
-                    .project(p)
-                    .title("Stage changed to " + target.name())
-                    .actionDate(java.time.LocalDate.now())
-                    .notes(dto.getNotes())
-                    .status(ActionStatus.COMPLETED)
-                    .createdBy(user)
-                    .build();
-            p.getActions().add(noteAction);
-        }
+        // Always create an action when stage changes
+        var user = staffUserRepository.findById(changedById).orElse(null);
+        String actionTitle = "Stage changed from " + oldStage.name() + " to " + target.name();
+        ProjectAction stageAction = ProjectAction.builder()
+                .project(p)
+                .title(actionTitle)
+                .actionDate(java.time.LocalDate.now())
+                .notes(dto.getNotes() != null && !dto.getNotes().isBlank() ? dto.getNotes() : null)
+                .status(ActionStatus.COMPLETED)
+                .createdBy(user)
+                .build();
+        p.getActions().add(stageAction);
+
         Project saved = projectRepository.save(p);
         return mapper.toDto(saved);
     }
 
     public List<ProjectActionDto> findActionsByDate(LocalDate date) {
-            var actions = actionRepository.findByActionDate(date);
-            return actions.stream().map(mapper::actionToDto).toList();
-        }
+        var actions = actionRepository.findByActionDateWithProject(date);
+        return actions.stream().map(mapper::actionToDto).toList();
+    }
 
     public List<ProjectActionDto> findAllActions() {
-            var actions = actionRepository.findAll();
-            return actions.stream().map(mapper::actionToDto).toList();
+        var actions = actionRepository.findAll();
+        return actions.stream().map(mapper::actionToDto).toList();
     }
 
     // optional: range query
     public List<ProjectActionDto> findActionsBetween(LocalDate from, LocalDate to) {
-        var actions = actionRepository.findByActionDateBetween(from, to); // add this method in repo if needed
+        var actions = actionRepository.findByActionDateBetweenWithProject(from, to);
         return actions.stream().map(mapper::actionToDto).toList();
     }
 

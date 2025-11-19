@@ -4,7 +4,6 @@ import com.RizSafProjectManager.ProjectManager.Dtos.*;
 import com.RizSafProjectManager.ProjectManager.Enums.ActionStatus;
 import com.RizSafProjectManager.ProjectManager.Enums.ProjectStage;
 import com.RizSafProjectManager.ProjectManager.Enums.WorkType;
-import com.RizSafProjectManager.ProjectManager.Models.OfficeStaff;
 import com.RizSafProjectManager.ProjectManager.Models.Project;
 import com.RizSafProjectManager.ProjectManager.Models.ProjectAction;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,8 @@ public class ProjectMapperImpl implements ProjectMapper {
     // -----------------------------
     @Override
     public ProjectResponseDto toDto(Project project) {
-        if (project == null) return null;
+        if (project == null)
+            return null;
 
         return ProjectResponseDto.builder()
                 .id(project.getId())
@@ -34,7 +34,7 @@ public class ProjectMapperImpl implements ProjectMapper {
                 .expectedEndDate(project.getExpectedEndDate())
                 .actualEndDate(project.getActualEndDate())
                 .stage(project.getStage() != null ? project.getStage().name() : null)
-                .createdById(project.getCreatedBy() != null ? project.getCreatedBy().getId() : null)
+                .createdById(project.getCreatedBy() != null ? project.getCreatedBy().getName() : null)
                 .createdAt(project.getCreatedAt())
                 .actions(actionsToDtoList(project.getActions()))
                 .build();
@@ -45,7 +45,8 @@ public class ProjectMapperImpl implements ProjectMapper {
     // -----------------------------
     @Override
     public Project toEntity(ProjectRequestDto dto) {
-        if (dto == null) return null;
+        if (dto == null)
+            return null;
 
         Project project = new Project();
         project.setCode(dto.getCode());
@@ -75,7 +76,8 @@ public class ProjectMapperImpl implements ProjectMapper {
     // -----------------------------
     @Override
     public ProjectActionDto actionToDto(ProjectAction action) {
-        if (action == null) return null;
+        if (action == null)
+            return null;
 
         return ProjectActionDto.builder()
                 .id(action.getId())
@@ -84,7 +86,10 @@ public class ProjectMapperImpl implements ProjectMapper {
                 .status(action.getStatus() != null ? action.getStatus().name() : null)
                 .notes(action.getNotes())
                 .createdAt(action.getCreatedAt())
-                .createdById(action.getCreatedBy() != null ? action.getCreatedBy().getId() : null)
+                .createdById(action.getCreatedBy() != null ? action.getCreatedBy().getName() : null)
+                .projectId(action.getProject() != null ? action.getProject().getId() : null)
+                .projectName(action.getProject() != null ? action.getProject().getName() : null)
+                .projectLsgdName(action.getProject() != null ? action.getProject().getLsgdName() : null)
                 .build();
     }
 
@@ -93,7 +98,8 @@ public class ProjectMapperImpl implements ProjectMapper {
     // -----------------------------
     @Override
     public ProjectAction toActionEntity(CreateActionRequestDto dto) {
-        if (dto == null) return null;
+        if (dto == null)
+            return null;
 
         ProjectAction action = new ProjectAction();
         action.setTitle(dto.getTitle());
@@ -109,7 +115,8 @@ public class ProjectMapperImpl implements ProjectMapper {
     // -----------------------------
     @Override
     public List<ProjectActionDto> actionsToDtoList(List<ProjectAction> actions) {
-        if (actions == null || actions.isEmpty()) return Collections.emptyList();
+        if (actions == null || actions.isEmpty())
+            return Collections.emptyList();
         return actions.stream()
                 .map(this::actionToDto)
                 .collect(Collectors.toList());
