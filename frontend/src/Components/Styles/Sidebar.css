@@ -1,0 +1,67 @@
+/* === Sidebar Styles (scoped) === */
+.sidebar {
+  width: 240px;
+  background: #19337b;
+  color: #ecf0f1;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  padding: 20px 0;
+}
+
+.sidebar h2 {
+  margin-bottom: 2rem;
+  font-size: 1.4rem;
+  color: #ffffff;
+  text-align: center;
+}
+
+/* Ensure nothing else paints white blocks */
+.sidebar .sidebar-menu,
+.sidebar .sidebar-menu li {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Use a dedicated class for links */
+.sidebar .sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  text-decoration: none;
+  color: #ecf0f1 !important;
+  border-radius: 6px;
+  transition: background 0.25s ease, color 0.25s ease;
+  background: transparent !important;       /* kill any global backgrounds */
+}
+
+/* Hover + active */
+.sidebar .sidebar-link:hover,
+.sidebar .sidebar-link.active {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.sidebar .sidebar-link i {
+  width: 20px;
+}
+
+/* As a safety net, neutralize buttons if any remain in the sidebar */
+.sidebar button {
+  background: transparent !important;
+  color: #ecf0f1 !important;
+  border: none !important;
+  width: 100%;
+  text-align: left;
+  padding: 12px 20px;
+  border-radius: 6px;
+}
+.sidebar button:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}

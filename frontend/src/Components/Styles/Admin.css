@@ -1,0 +1,57 @@
+.logout-btn {
+  background: #e74c3c;
+  border: none;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.logout-btn:hover {
+  background: #c0392b;
+}
+
+.cards-container {
+  display: flex; /* or grid */
+  flex-wrap: wrap; /* allow wrapping to next line */
+  justify-content: flex-start;
+  justify-content: flex-start; /* Align cards to the left */
+  gap: 20px; /* space between cards */
+  margin-top: 20px;
+}
+
+.card {
+  background: #f8fbfd;
+  border-radius: 8px;
+  padding: 20px;
+  width: 220px; /* fixed width for consistency */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  text-align: center;
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.section {
+  margin-top: 30px;
+}
+
+.table-placeholder {
+  background-color: #f7f7f7;
+  padding: 20px;
+  border-radius: 8px;
+  min-height: 200px;
+  margin-top: 20px;
+}
+
+.close {
+  cursor: pointer;
+  font-size: 20px;
+  color: #c0392b;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}

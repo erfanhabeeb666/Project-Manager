@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { scheduleAutoLogout } from "../utils/auth";
 import './Styles/Login.css';
+import './Styles/Main.css'
+
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -13,6 +16,7 @@ const Login = () => {
         const apiUrl = process.env.REACT_APP_API_URL;
         e.preventDefault();
         setError(null);
+        
         try {
             const response = await axios.post(`${apiUrl}auth/authenticate`, {
                 email,
@@ -21,6 +25,7 @@ const Login = () => {
 
             const token = response.data.token;
             localStorage.setItem("jwtToken", token);
+            scheduleAutoLogout();
 
             const decodedToken = jwtDecode(token);
             const role = decodedToken.userType;
@@ -39,25 +44,27 @@ const Login = () => {
 
     return (
         <div className="login-container">
-            <h2>Login</h2>
-            <form onSubmit={handleLogin}>
+            <form className="form-box" onSubmit={handleLogin}>
+                <h2>User Login</h2>
                 <input
                     type="email"
+                    id="username"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                 />
                 <input
-                    type="text"
+                    type="password"
+                    id="password"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                 />
                 <button type="submit">Login</button>
+                {error && <div className="error show">{error}</div>}
             </form>
-            {error && <p className="error">{error}</p>}
         </div>
     );
 };

@@ -1,14 +1,53 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import './Styles/Admin.css';
+import './Styles/Main.css';
+import './Styles/Sidebar.css';
+import { getDisplayName } from "../utils/auth";
 
 const Admin = () => {
     const navigate = useNavigate();
+    const handleLogout = () => {
+        localStorage.removeItem("jwtToken");
+        navigate("/");
+    };
     return (
-        <div className="admin-dashboard">
-            <h1>Admin Dashboard</h1>
-            <p>Welcome to the Admin Dashboard.</p>
-        
-        </div>
+        <div className="dashboard-container">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <center><h2>Rizsaf Pvt Ltd</h2></center>
+        <nav>
+          <ul className="sidebar-menu">
+            <li>
+              <NavLink to="/admin" className="sidebar-link">
+                <i className="fas fa-tachometer-alt"></i> Dashboard
+              </NavLink>
+            </li>
+             <li>
+              <NavLink to="/admin/office-staff" className="sidebar-link">
+                <i className="fas fa-tachometer-alt"></i> Office Staff
+              </NavLink>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <main className="main-content">
+        <header className="topbar">
+          <h1>Project Manager Dashboard</h1>
+          <div className="topbar-actions">
+            <span className="greeting">Hello, {getDisplayName()}</span>
+            <button className="logout-btn" onClick={handleLogout}>Logout</button>
+          </div>
+        </header>
+        <section className="content-area">
+            <h2>Welcome to the Admin Dashboard</h2>
+            <p>Select an option from the sidebar to get started.</p>
+        </section>
+        </main>
+    </div>
     );
 };
 
