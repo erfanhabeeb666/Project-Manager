@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjectService {
@@ -173,6 +174,63 @@ public class ProjectService {
     public List<ProjectActionDto> findActionsBetween(LocalDate from, LocalDate to) {
         var actions = actionRepository.findByActionDateBetweenWithProject(from, to);
         return actions.stream().map(mapper::actionToDto).toList();
+    }
+
+    public OfficeStaffDashboardStatsDto getOfficeStaffDashboardStats(Long staffId) {
+        var myProjects = projectRepository.findAll().stream()
+                .filter(p -> p.getCreatedBy() != null && p.getCreatedBy().getId().equals(staffId))
+                .toList();
+        
+        long myProjectsCount = myProjects.size();
+        
+        var allMyActions = myProjects.stream()
+                .flatMap(p -> p.getActions().stream())
+                .filter(a -> a.getActionType() != ActionType.STAGE_CHANGE)
+                .toList();
+        
+        long pendingActionsCount = allMyActions.stream()
+                .filter(a -> a.getStatus() == ActionStatus.PENDING)
+                .count();
+        
+        long completedActionsCount = allMyActions.stream()
+                .filter(a -> a.getStatus() == ActionStatus.COMPLETED)
+                .count();
+        
+        double myProjectsTotalExpenses = myProjects.stream()
+                .mapToDouble(p -> p.getTotalExpense() != null ? p.getTotalExpense() : 0.0)
+                .sum();
+        
+        double myProjectsTotalSanctionedAmount = myProjects.stream()
+                .mapToDouble(p -> p.getSanctionedAmount() != null ? 
+                        p.getSanctionedAmount().doubleValue() : 0.0)
+                .sum();
+        
+        Map<String, Long> myProjectsByStage = myProjects.stream()
+                .collect(Collectors.groupingBy(
+                        p -> p.getStage() != null ? p.getStage().name() : "UNKNOWN",
+                        Collectors.counting()
+                ));
+        
+        LocalDate today = LocalDate.now();
+        var todayActions = actionRepository.findByActionDateWithProject(today);
+        long totalActionsToday = todayActions.stream()
+                .filter(a -> a.getActionType() != ActionType.STAGE_CHANGE)
+                .count();
+        long pendingActionsToday = todayActions.stream()
+                .filter(a -> a.getActionType() != ActionType.STAGE_CHANGE && 
+                            a.getStatus() == ActionStatus.PENDING)
+                .count();
+        
+        return OfficeStaffDashboardStatsDto.builder()
+                .myProjectsCount(myProjectsCount)
+                .pendingActionsCount(pendingActionsCount)
+                .completedActionsCount(completedActionsCount)
+                .myProjectsTotalExpenses(myProjectsTotalExpenses)
+                .myProjectsTotalSanctionedAmount(myProjectsTotalSanctionedAmount)
+                .myProjectsByStage(myProjectsByStage)
+                .totalActionsToday(totalActionsToday)
+                .pendingActionsToday(pendingActionsToday)
+                .build();
     }
 
 }

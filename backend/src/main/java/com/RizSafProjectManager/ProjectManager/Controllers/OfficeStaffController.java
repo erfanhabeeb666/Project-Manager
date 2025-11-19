@@ -1,6 +1,7 @@
 package com.RizSafProjectManager.ProjectManager.Controllers;
 
 import com.RizSafProjectManager.ProjectManager.Dtos.*;
+import com.RizSafProjectManager.ProjectManager.Dtos.OfficeStaffDashboardStatsDto;
 import com.RizSafProjectManager.ProjectManager.Enums.ActionStatus;
 import com.RizSafProjectManager.ProjectManager.Enums.ExpenseType;
 import com.RizSafProjectManager.ProjectManager.Exception.BadRequestException;
@@ -216,6 +217,17 @@ public class OfficeStaffController {
                 .success(true)
                 .message("Workers fetched")
                 .data(workerDtos)
+                .build());
+    }
+
+    @GetMapping("/dashboard/stats")
+    public ResponseEntity<ApiResponse<OfficeStaffDashboardStatsDto>> getDashboardStats() {
+        Long staffId = Long.valueOf(jwtService.extractId(jwtUtils.getJwtFromRequest(request)));
+        var stats = projectService.getOfficeStaffDashboardStats(staffId);
+        return ResponseEntity.ok(ApiResponse.<OfficeStaffDashboardStatsDto>builder()
+                .success(true)
+                .message("Dashboard statistics fetched")
+                .data(stats)
                 .build());
     }
 }

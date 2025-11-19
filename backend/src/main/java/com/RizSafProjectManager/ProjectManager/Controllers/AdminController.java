@@ -1,6 +1,7 @@
 package com.RizSafProjectManager.ProjectManager.Controllers;
 
 import com.RizSafProjectManager.ProjectManager.Dtos.ApiResponse;
+import com.RizSafProjectManager.ProjectManager.Dtos.DashboardStatsDto;
 import com.RizSafProjectManager.ProjectManager.Dtos.OfficeStaffDTO;
 import com.RizSafProjectManager.ProjectManager.Dtos.ProjectActionDto;
 import com.RizSafProjectManager.ProjectManager.Dtos.ProjectResponseDto;
@@ -77,5 +78,15 @@ public class AdminController {
         }
         return ResponseEntity.ok(ApiResponse.<List<ProjectActionDto>>builder()
                 .success(true).message("Actions fetched").data(result).build());
+    }
+
+    @GetMapping("/dashboard/stats")
+    public ResponseEntity<ApiResponse<DashboardStatsDto>> getDashboardStats() {
+        var stats = adminService.getDashboardStats();
+        return ResponseEntity.ok(ApiResponse.<DashboardStatsDto>builder()
+                .success(true)
+                .message("Dashboard statistics fetched")
+                .data(stats)
+                .build());
     }
 }
