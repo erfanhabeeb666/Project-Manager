@@ -149,25 +149,27 @@ const AdminActions = () => {
                 </tr>
               </thead>
               <tbody>
-                {actions.length === 0 ? (
+                {actions.filter(action => action.actionType !== "STAGE_CHANGE").length === 0 ? (
                   <tr>
                     <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
                       No actions found
                     </td>
                   </tr>
                 ) : (
-                  actions.map((action) => (
-                    <tr key={action.id}>
-                      <td>{action.title}</td>
-                      <td>{action.projectName ?? "-"}</td>
-                      <td>{action.projectLsgdName ?? "-"}</td>
-                      <td>{action.actionDate ?? "-"}</td>
-                      <td>{action.status}</td>
-                      <td>{action.notes ?? "-"}</td>
-                      <td>{action.createdById ?? "-"}</td>
-                      <td>{action.createdAt?.split("T")[0] ?? "-"}</td>
-                    </tr>
-                  ))
+                  actions
+                    .filter(action => action.actionType !== "STAGE_CHANGE")
+                    .map((action) => (
+                      <tr key={action.id}>
+                        <td>{action.title}</td>
+                        <td>{action.projectName ?? "-"}</td>
+                        <td>{action.projectLsgdName ?? "-"}</td>
+                        <td>{action.actionDate ?? "-"}</td>
+                        <td>{action.status}</td>
+                        <td>{action.notes ?? "-"}</td>
+                        <td>{action.createdById ?? "-"}</td>
+                        <td>{action.createdAt?.split("T")[0] ?? "-"}</td>
+                      </tr>
+                    ))
                 )}
               </tbody>
             </table>

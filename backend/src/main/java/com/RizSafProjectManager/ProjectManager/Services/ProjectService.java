@@ -152,7 +152,9 @@ public class ProjectService {
                 .createdBy(user)
                 .build();
         p.getActions().add(stageAction);
-
+        if(target.equals(ProjectStage.PROJECT_CLOSED)){
+            p.setActualEndDate(java.time.LocalDate.now());
+        }
         Project saved = projectRepository.save(p);
         return mapper.toDto(saved);
     }

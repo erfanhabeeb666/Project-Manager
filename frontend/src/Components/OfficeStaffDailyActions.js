@@ -114,9 +114,12 @@ const OfficeStaffDailyActions = () => {
   };
 
   const sortedActions = useMemo(() => {
-    if (!datedActions.length) return [];
+    // Filter out STAGE_CHANGE actions
+    const filteredActions = datedActions.filter(action => action.actionType !== "STAGE_CHANGE");
     
-    const sorted = [...datedActions].sort((a, b) => {
+    if (!filteredActions.length) return [];
+    
+    const sorted = [...filteredActions].sort((a, b) => {
       let aValue, bValue;
       
       switch (sortField) {
@@ -258,7 +261,7 @@ const OfficeStaffDailyActions = () => {
               </div>
             </div>
             {actionsError && <p className="error-text">{actionsError}</p>}
-            {datedActions.length > 0 && (
+            {sortedActions.length > 0 && (
               <div className="filters-row" style={{ marginBottom: '16px', marginTop: '8px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span>Sort by:</span>
@@ -287,7 +290,7 @@ const OfficeStaffDailyActions = () => {
             <div className="table-scroll">
               {actionsLoading ? (
                 <p className="muted-text">Loading actions...</p>
-              ) : datedActions.length === 0 ? (
+              ) : sortedActions.length === 0 ? (
                 <p className="muted-text">No actions scheduled.</p>
               ) : (
                 <table className="main-table">

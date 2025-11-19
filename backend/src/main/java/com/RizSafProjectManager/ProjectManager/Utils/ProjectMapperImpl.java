@@ -97,6 +97,7 @@ public class ProjectMapperImpl implements ProjectMapper {
                 .projectId(action.getProject() != null ? action.getProject().getId() : null)
                 .projectName(action.getProject() != null ? action.getProject().getName() : null)
                 .projectLsgdName(action.getProject() != null ? action.getProject().getLsgdName() : null)
+                .actionType(action.getActionType() != null ? action.getActionType().name() : null)
                 .build();
     }
 

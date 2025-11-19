@@ -20,4 +20,5 @@ public class ProjectActionDto {
     private Long projectId;
     private String projectName;
     private String projectLsgdName;
+    private String actionType;
 }
