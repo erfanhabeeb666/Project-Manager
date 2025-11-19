@@ -215,6 +215,8 @@ const AdminExpenses = () => {
                       <thead>
                         <tr>
                           <th>Type</th>
+                          <th>Project Name</th>
+                          <th>LSGD Name</th>
                           <th>Project</th>
                           <th>Description</th>
                           <th>Total Amount</th>
@@ -229,6 +231,8 @@ const AdminExpenses = () => {
                         {dateExpenses.map((expense) => (
                           <tr key={expense.id}>
                             <td>{expense.type}</td>
+                            <td>{expense.projectName ?? "-"}</td>
+                            <td>{expense.projectLsgdName ?? "-"}</td>
                             <td>
                               {expense.projectId ? (
                                 <button

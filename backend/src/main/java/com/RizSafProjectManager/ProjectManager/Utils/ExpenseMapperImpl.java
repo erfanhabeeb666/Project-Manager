@@ -28,6 +28,8 @@ public class ExpenseMapperImpl implements ExpenseMapper {
                 .id(expense.getId())
                 .type(expense.getType())
                 .projectId(expense.getProject() != null ? expense.getProject().getId() : null)
+                .projectName(expense.getProject() != null ? expense.getProject().getName() : null)
+                .projectLsgdName(expense.getProject() != null ? expense.getProject().getLsgdName() : null)
                 .date(expense.getDate())
                 .description(expense.getDescription())
                 .totalAmount(expense.getTotalAmount())
@@ -56,21 +58,21 @@ public class ExpenseMapperImpl implements ExpenseMapper {
                         item.setParticular(itemDto.getParticular());
                         item.setQuantity(itemDto.getQuantity());
                         item.setRate(itemDto.getRate());
-                        
+
                         // Auto-calculate: item.amount = quantity * rate
                         if (itemDto.getQuantity() != null && itemDto.getRate() != null) {
                             item.setAmount(itemDto.getQuantity() * itemDto.getRate());
                         } else {
                             item.setAmount(0.0);
                         }
-                        
+
                         item.setExpense(expense);
                         return item;
                     })
                     .collect(Collectors.toList());
-            
+
             expense.setItems(items);
-            
+
             // Auto-calculate: expense.totalAmount = sum(item.amount)
             double total = items.stream()
                     .mapToDouble(item -> item.getAmount() != null ? item.getAmount() : 0.0)
@@ -80,7 +82,8 @@ public class ExpenseMapperImpl implements ExpenseMapper {
             expense.setTotalAmount(0.0);
         }
 
-        // Map workers if provided (only for VISIT type, but we'll allow it for any type)
+        // Map workers if provided (only for VISIT type, but we'll allow it for any
+        // type)
         if (dto.getWorkerIds() != null && !dto.getWorkerIds().isEmpty()) {
             List<Worker> workers = workerRepository.findAllById(dto.getWorkerIds());
             expense.setWorkers(workers);
@@ -92,7 +95,7 @@ public class ExpenseMapperImpl implements ExpenseMapper {
     private List<ExpenseItemResponseDto> itemsToDtoList(List<ExpenseItem> items) {
         if (items == null || items.isEmpty())
             return Collections.emptyList();
-        
+
         return items.stream()
                 .map(this::itemToDto)
                 .collect(Collectors.toList());
@@ -114,7 +117,7 @@ public class ExpenseMapperImpl implements ExpenseMapper {
     private List<WorkerResponseDto> workersToDtoList(List<Worker> workers) {
         if (workers == null || workers.isEmpty())
             return Collections.emptyList();
-        
+
         return workers.stream()
                 .map(this::workerToDto)
                 .collect(Collectors.toList());
@@ -133,4 +136,3 @@ public class ExpenseMapperImpl implements ExpenseMapper {
                 .build();
     }
 }
-

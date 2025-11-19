@@ -2,6 +2,7 @@ package com.RizSafProjectManager.ProjectManager.Services;
 
 import com.RizSafProjectManager.ProjectManager.Dtos.*;
 import com.RizSafProjectManager.ProjectManager.Enums.ActionStatus;
+import com.RizSafProjectManager.ProjectManager.Enums.ActionType;
 import com.RizSafProjectManager.ProjectManager.Enums.ProjectStage;
 import com.RizSafProjectManager.ProjectManager.Enums.WorkType;
 import com.RizSafProjectManager.ProjectManager.Exception.BadRequestException;
@@ -144,6 +145,7 @@ public class ProjectService {
         ProjectAction stageAction = ProjectAction.builder()
                 .project(p)
                 .title(actionTitle)
+                .actionType(ActionType.STAGE_CHANGE)
                 .actionDate(java.time.LocalDate.now())
                 .notes(dto.getNotes() != null && !dto.getNotes().isBlank() ? dto.getNotes() : null)
                 .status(ActionStatus.COMPLETED)

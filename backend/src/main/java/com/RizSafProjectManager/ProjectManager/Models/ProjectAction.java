@@ -1,6 +1,7 @@
 package com.RizSafProjectManager.ProjectManager.Models;
 
 import com.RizSafProjectManager.ProjectManager.Enums.ActionStatus;
+import com.RizSafProjectManager.ProjectManager.Enums.ActionType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
@@ -36,4 +37,8 @@ public class ProjectAction {
 
     @Column(name = "created_at")
     private Instant createdAt = Instant.now();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "actionType")
+    private ActionType actionType;
 }

@@ -139,6 +139,8 @@ const AdminActions = () => {
               <thead>
                 <tr>
                   <th>Title</th>
+                  <th>Project Name</th>
+                  <th>LSGD Name</th>
                   <th>Date</th>
                   <th>Status</th>
                   <th>Notes</th>
@@ -149,7 +151,7 @@ const AdminActions = () => {
               <tbody>
                 {actions.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>
+                    <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
                       No actions found
                     </td>
                   </tr>
@@ -157,6 +159,8 @@ const AdminActions = () => {
                   actions.map((action) => (
                     <tr key={action.id}>
                       <td>{action.title}</td>
+                      <td>{action.projectName ?? "-"}</td>
+                      <td>{action.projectLsgdName ?? "-"}</td>
                       <td>{action.actionDate ?? "-"}</td>
                       <td>{action.status}</td>
                       <td>{action.notes ?? "-"}</td>

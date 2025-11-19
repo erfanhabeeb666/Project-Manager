@@ -14,6 +14,8 @@ public class ExpenseResponseDto {
     private Long id;
     private ExpenseType type;
     private Long projectId;
+    private String projectName;
+    private String projectLsgdName;
     private LocalDate date;
     private String description;
     private Double totalAmount;
@@ -22,4 +24,3 @@ public class ExpenseResponseDto {
     private String createdByName;
     private LocalDateTime createdAt;
 }
-
