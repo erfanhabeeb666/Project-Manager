@@ -11,6 +11,7 @@ public class ConvertToDto {
         dto.setName(officeStaff.getName());
         dto.setEmail(officeStaff.getEmail());
         dto.setMobileNumber(officeStaff.getMobileNumber());
+        dto.setAdharUid(officeStaff.getAdharUid());
         return dto;
     }
 }
