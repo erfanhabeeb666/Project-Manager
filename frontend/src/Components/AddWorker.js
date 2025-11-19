@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const AddOfficeStaff = ({ onSuccess }) => {
-  const [officeStaff, setOfficeStaff] = useState({
+const AddWorker = ({ onSuccess }) => {
+  const [worker, setWorker] = useState({
     name: '',
-    email: '',
-    password: '',
     mobileNumber: '',
     adharUid: ''
   });
@@ -20,20 +18,16 @@ const AddOfficeStaff = ({ onSuccess }) => {
     if (name === 'phoneNumber') {
       value = value.replace(/\D/g, '');
     }
-    setOfficeStaff({ ...officeStaff, [name]: value });
+    setWorker({ ...worker, [name]: value });
     if (errors[name]) setErrors({ ...errors, [name]: undefined });
   };
 
   const validate = () => {
     const errs = {};
-    if (!officeStaff.name.trim()) errs.name = 'Name is required';
-    if (!officeStaff.email.trim()) errs.email = 'Email is required';
-    else if (!/^\S+@\S+\.[\w-]+$/.test(officeStaff.email.trim())) errs.email = 'Enter a valid email';
-    if (!officeStaff.password) errs.password = 'Password is required';
-    else if (officeStaff.password.length < 6) errs.password = 'Password must be at least 6 characters';
-    if (!officeStaff.mobileNumber.trim()) errs.mobileNumber = 'Mobile number is required';
-    else if (!/^\d{10}$/.test(officeStaff.mobileNumber.trim())) errs.mobileNumber = 'Enter a valid 10-digit phone number';
-    if (!officeStaff.adharUid.trim()) errs.adharUid = 'adhar is required';
+    if (!worker.name.trim()) errs.name = 'Name is required';
+    if (!worker.mobileNumber.trim()) errs.mobileNumber = 'Mobile number is required';
+    else if (!/^\d{10}$/.test(worker.mobileNumber.trim())) errs.mobileNumber = 'Enter a valid 10-digit phone number';
+    if (!worker.adharUid.trim()) errs.adharUid = 'adhar is required';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -46,28 +40,23 @@ const AddOfficeStaff = ({ onSuccess }) => {
       const apiUrl = process.env.REACT_APP_API_URL;
 
       const payload = {
-        name: officeStaff.name.trim(),
-        email: officeStaff.email.trim().toLowerCase(),
-        password: officeStaff.password,
-        mobileNumber: officeStaff.mobileNumber.trim(),
-        adharUid: officeStaff.adharUid.trim(),
+        name: worker.name.trim(),
+        mobileNumber: worker.mobileNumber.trim(),
+        adharUid: worker.adharUid.trim(),
       };
 
       await axios.post(
-        `${apiUrl}admin/add-staff`,
+        `${apiUrl}admin/add-worker`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      setSuccessMessage("Staff added successfully!");
+      setSuccessMessage("worker added successfully!");
       setError('');
-      setOfficeStaff({
+      setWorker({
         name: '',
-        email: '',
-        password: '',
-        userType: 'OFFICE_STAFF',
         mobileNumber: '',
         adharUid: ''
       });
@@ -107,7 +96,7 @@ const AddOfficeStaff = ({ onSuccess }) => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold">Add OFFICE_STAFF</h2>
+      <h2 className="text-2xl font-semibold">Add Worker</h2>
 
       {successMessage && <p className="text-green-600">{successMessage}</p>}
       {error && <p className="text-red-600">{error}</p>}
@@ -116,38 +105,19 @@ const AddOfficeStaff = ({ onSuccess }) => {
         <input
           type="text"
           name="name"
-          value={officeStaff.name}
+          value={worker.name}
           onChange={handleChange}
           placeholder="Full Name"
           required
           className="w-full p-2 border rounded"
         />
         {errors.name && <p className="text-red-600 text-sm">{errors.name}</p>}
-        <input
-          type="email"
-          name="email"
-          value={officeStaff.email}
-          onChange={handleChange}
-          placeholder="Email"
-          required
-          className="w-full p-2 border rounded"
-        />
-        {errors.email && <p className="text-red-600 text-sm">{errors.email}</p>}
-        <input
-          type="password"
-          name="password"
-          value={officeStaff.password}
-          onChange={handleChange}
-          placeholder="Password"
-          required
-          className="w-full p-2 border rounded"
-        />
-        {errors.password && <p className="text-red-600 text-sm">{errors.password}</p>}
+
          
         <input
           type="tel"
           name="mobileNumber"
-          value={officeStaff.mobileNumber}
+          value={worker.mobileNumber}
           onChange={handleChange}
           placeholder="Mobile Number"
           required
@@ -160,7 +130,7 @@ const AddOfficeStaff = ({ onSuccess }) => {
         {errors.mobileNumber && <p className="text-red-600 text-sm">{errors.phoneNumber}</p>}
         <textarea
           name="adharUid"
-          value={officeStaff.adharUid}
+          value={worker.adharUid}
           onChange={handleChange}
           placeholder="AdharUid"
           required
@@ -178,4 +148,4 @@ const AddOfficeStaff = ({ onSuccess }) => {
   );
 };
 
-export default AddOfficeStaff;
+export default AddWorker;

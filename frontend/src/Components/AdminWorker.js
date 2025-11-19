@@ -5,33 +5,33 @@ import './Styles/Admin.css';
 import './Styles/Main.css';
 import './Styles/Sidebar.css';
 import { getDisplayName } from "../utils/auth";
-import AddOfficeStaff from "./AddOfficeStaff";
+import AddWorker from "./AddWorker";
 
-const AdminOfficeStaff = () => {
-  const [officeStaffList, setOfficeStaffList] = useState([]);
+const AdminWorker = () => {
+  const [workerList, setWorkerList] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const fetchOfficeStaff = async () => {
+  const fetchWorker = async () => {
     try {
       const token = localStorage.getItem("jwtToken");
       const apiUrl = process.env.REACT_APP_API_URL;
 
-      const response = await axios.get(`${apiUrl}admin/list-staff`, {
+      const response = await axios.get(`${apiUrl}admin/list-worker`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setOfficeStaffList(response.data);
+      setWorkerList(response.data);
     } catch (err) {
       console.error("Failed to fetch staff", err);
     }
   };
 
   useEffect(() => {
-    fetchOfficeStaff();
+    fetchWorker();
   }, []);
 
   const handleAddSuccess = () => {
-    fetchOfficeStaff();
+    fetchWorker();
     setShowAddForm(false);
   };
 
@@ -57,11 +57,11 @@ const AdminOfficeStaff = () => {
                 <i className="fas fa-tachometer-alt"></i> Office Staff
               </NavLink>
             </li>
-            <li>
-                          <NavLink to="/admin/worker" className="sidebar-link">
-                            <i className="fas fa-tachometer-alt"></i> Workers
-                          </NavLink>
-                        </li>
+             <li>
+              <NavLink to="/admin/worker" className="sidebar-link">
+                <i className="fas fa-tachometer-alt"></i> Workers
+              </NavLink>
+            </li>
           </ul>
         </nav>
       </aside>
@@ -76,15 +76,15 @@ const AdminOfficeStaff = () => {
           </div>
         </header>
         <div className="mb-4 flex space-x-4" style={{ marginBottom: "20px" ,marginTop:"50px" }}>
-          <button onClick={() => setShowAddForm(true)}>+ Add staff</button>
-          <button onClick={() => fetchOfficeStaff()} style={{ marginLeft: "15px" }}>Refresh List</button>
+          <button onClick={() => setShowAddForm(true)}>+ Add Worker</button>
+          <button onClick={() => fetchWorker()} style={{ marginLeft: "15px" }}>Refresh List</button>
         </div>
 
-        {/* Add Office Staff Modal */}
+        {/* Add Worker Staff Modal */}
         {showAddForm && (
           <div className="modal-overlay">
             <div className="form-container">
-              <AddOfficeStaff onSuccess={handleAddSuccess} />
+              <AddWorker onSuccess={handleAddSuccess} />
               <button onClick={() => setShowAddForm(false)} className="btn-cancel">Close</button>
             </div>
           </div>
@@ -97,23 +97,23 @@ const AdminOfficeStaff = () => {
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Email</th>
                 <th>Mobile</th>
                 <th>Adhar</th>
+                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              {officeStaffList.length === 0 ? (
+              {workerList.length === 0 ? (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>No Office Staff available</td>
+                  <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>No Workers available</td>
                 </tr>
               ) : (
-                officeStaffList.map((staff) => (
-                  <tr key={staff.id}>
-                    <td>{staff.name}</td>
-                    <td>{staff.email}</td>
-                    <td>{staff.mobileNumber}</td>
-                    <td>{staff.adharUid}</td>
+                workerList.map((worker) => (
+                  <tr key={worker.id}>
+                    <td>{worker.name}</td>
+                    <td>{worker.mobileNumber}</td>
+                    <td>{worker.adharUid}</td>
+                    <td>{worker.status}</td>
                   </tr>
                 ))
               )}
@@ -125,5 +125,5 @@ const AdminOfficeStaff = () => {
     );
 };
 
-export default AdminOfficeStaff;
+export default AdminWorker;
 

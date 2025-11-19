@@ -29,6 +29,11 @@ const Admin = () => {
                 <i className="fas fa-tachometer-alt"></i> Office Staff
               </NavLink>
             </li>
+            <li>
+                          <NavLink to="/admin/worker" className="sidebar-link">
+                            <i className="fas fa-tachometer-alt"></i> Workers
+                          </NavLink>
+                        </li>
           </ul>
         </nav>
       </aside>
