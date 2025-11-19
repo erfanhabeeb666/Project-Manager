@@ -1,13 +1,19 @@
 /* === Sidebar Styles (scoped) === */
 .sidebar {
   width: 240px;
-  background: #19337b;
+  background: linear-gradient(rgba(25, 51, 123, 0.85), rgba(25, 51, 123, 0.85)),
+              url('../asset/sidebar.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: #ecf0f1;
   position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
   padding: 20px 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
 }
 
 .sidebar h2 {
@@ -15,6 +21,9 @@
   font-size: 1.4rem;
   color: #ffffff;
   text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+  padding: 0 10px;
 }
 
 /* Ensure nothing else paints white blocks */
@@ -37,15 +46,20 @@
   text-decoration: none;
   color: #ecf0f1 !important;
   border-radius: 6px;
-  transition: background 0.25s ease, color 0.25s ease;
-  background: transparent !important;       /* kill any global backgrounds */
+  transition: all 0.3s ease;
+  background: transparent !important;
+  margin: 4px 10px;
+  font-weight: 500;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Hover + active */
 .sidebar .sidebar-link:hover,
 .sidebar .sidebar-link.active {
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(255, 255, 255, 0.2) !important;
   color: #ffffff !important;
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar .sidebar-link i {
