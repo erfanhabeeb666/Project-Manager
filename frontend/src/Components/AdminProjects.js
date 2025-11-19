@@ -188,6 +188,7 @@ const AdminProjects = () => {
                     <th>Stage</th>
                     <th>Sanctioned Amount</th>
                     <th>Expected End Date</th>
+                    <th>Actual End Date</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -207,6 +208,7 @@ const AdminProjects = () => {
                         <td>{project.stage}</td>
                         <td>{project.sanctionedAmount ?? "-"}</td>
                         <td>{project.expectedEndDate ?? "-"}</td>
+                        <td>{project.actualEndDate ?? "-"}</td>
                         <td>
                           <button onClick={() => handleViewDetails(project.id)}>View</button>
                         </td>
