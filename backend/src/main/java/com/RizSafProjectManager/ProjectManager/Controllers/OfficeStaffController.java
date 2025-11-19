@@ -1,0 +1,116 @@
+package com.RizSafProjectManager.ProjectManager.Controllers;
+
+import com.RizSafProjectManager.ProjectManager.Dtos.*;
+import com.RizSafProjectManager.ProjectManager.Enums.ActionStatus;
+import com.RizSafProjectManager.ProjectManager.Security.JwtService;
+import com.RizSafProjectManager.ProjectManager.Security.JwtUtils;
+import com.RizSafProjectManager.ProjectManager.Services.ProjectService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import java.net.URI;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/office-staff")
+@PreAuthorize("hasAuthority('OFFICE_STAFF')")
+public class OfficeStaffController {
+
+    private final ProjectService projectService;
+    private final HttpServletRequest request;
+    private final JwtUtils jwtUtils;
+    private final JwtService jwtService;
+
+    public OfficeStaffController(ProjectService projectService, HttpServletRequest request, JwtUtils jwtUtils, JwtService jwtService) {
+        this.projectService = projectService;
+        this.request = request;
+        this.jwtUtils = jwtUtils;
+        this.jwtService = jwtService;
+    }
+
+    @PostMapping("/projects")
+    public ResponseEntity<ApiResponse<ProjectResponseDto>> createProject(
+            @Valid @RequestBody ProjectRequestDto dto) {
+        Long createdById = Long.valueOf(jwtService.extractId(jwtUtils.getJwtFromRequest(request)));
+        var created = projectService.createProject(dto, createdById);
+        return ResponseEntity.created(URI.create("/office-staff/projects/" + created.getId()))
+                .body(ApiResponse.<ProjectResponseDto>builder().success(true).message("Project created").data(created).build());
+    }
+
+    @GetMapping("/projects")
+    public ResponseEntity<ApiResponse<Page<ProjectResponseDto>>> listProjects(
+            @RequestParam Optional<String> stage,
+            @RequestParam Optional<Integer> page,
+            @RequestParam Optional<Integer> size) {
+        Pageable pageable = PageRequest.of(page.orElse(0), size.orElse(20), Sort.by("createdAt").descending());
+        var pageRes = projectService.listProjects(stage, pageable);
+        return ResponseEntity.ok(ApiResponse.<Page<ProjectResponseDto>>builder().success(true).message("Projects fetched").data(pageRes).build());
+    }
+
+    @GetMapping("/projects/{id}")
+    public ResponseEntity<ApiResponse<ProjectResponseDto>> getProject(@PathVariable Long id) {
+        var dto = projectService.getProject(id);
+        return ResponseEntity.ok(ApiResponse.<ProjectResponseDto>builder().success(true).message("Project fetched").data(dto).build());
+    }
+
+    @PutMapping("/projects/{id}")
+    public ResponseEntity<ApiResponse<ProjectResponseDto>> updateProject(
+            @PathVariable Long id,
+            @Valid @RequestBody ProjectRequestDto dto) {
+        Long updatedById = Long.valueOf(jwtService.extractId(jwtUtils.getJwtFromRequest(request)));
+        var updated = projectService.updateProject(id, dto, updatedById);
+        return ResponseEntity.ok(ApiResponse.<ProjectResponseDto>builder().success(true).message("Project updated").data(updated).build());
+    }
+
+    @PutMapping("/projects/{id}/stage")
+    public ResponseEntity<ApiResponse<ProjectResponseDto>> changeStage(
+            @PathVariable Long id,
+            @Valid @RequestBody ChangeStageRequestDto dto) {
+        Long changedById = Long.valueOf(jwtService.extractId(jwtUtils.getJwtFromRequest(request)));
+        var updated = projectService.changeStage(id, dto, changedById);
+        return ResponseEntity.ok(ApiResponse.<ProjectResponseDto>builder().success(true).message("Stage changed").data(updated).build());
+    }
+
+    @PostMapping("/projects/{id}/actions")
+    public ResponseEntity<ApiResponse<ProjectActionDto>> addAction(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateActionRequestDto dto) {
+        Long createdById = Long.valueOf(jwtService.extractId(jwtUtils.getJwtFromRequest(request)));
+        var action = projectService.addAction(id, dto, createdById);
+        return ResponseEntity.created(URI.create("/office-staff/projects/" + id + "/actions/" + action.getId()))
+                .body(ApiResponse.<ProjectActionDto>builder().success(true).message("Action added").data(action).build());
+    }
+
+    @PutMapping("/projects/{projectId}/actions/{actionId}")
+    public ResponseEntity<ApiResponse<ProjectActionDto>> updateActionStatus(
+            @PathVariable Long projectId,
+            @PathVariable Long actionId,
+            @RequestParam ActionStatus status) {
+        Long updaterId = Long.valueOf(jwtService.extractId(jwtUtils.getJwtFromRequest(request)));
+        var action = projectService.updateActionStatus(projectId, actionId, status, updaterId);
+        return ResponseEntity.ok(ApiResponse.<ProjectActionDto>builder().success(true).message("Action updated").data(action).build());
+    }
+    @GetMapping("/actions")
+    public ResponseEntity<ApiResponse<List<ProjectActionDto>>> getActionsByDate(
+            @RequestParam Optional<String> date) {
+
+        LocalDate d = date.map(LocalDate::parse).orElse(LocalDate.now());
+        var actions = projectService.findActionsByDate(d);
+        return ResponseEntity.ok(ApiResponse.<List<ProjectActionDto>>builder()
+                .success(true).message("Actions fetched").data(actions).build());
+    }
+
+    // Note: /office-staff/actions/today already implemented, but for clarity:
+    @GetMapping("/actions/today")
+    public ResponseEntity<ApiResponse<List<ProjectActionDto>>> todaysActions() {
+        LocalDate today = LocalDate.now();
+        var actions = projectService.findActionsByDate(today);
+        return ResponseEntity.ok(ApiResponse.<List<ProjectActionDto>>builder()
+                .success(true).message("Today's actions").data(actions).build());
+    }
+}

@@ -15,10 +15,10 @@ const OfficeStaff = () => {
     <div className="dashboard-container">
       {/* Sidebar */}
       <aside className="sidebar">
-        <center><h2>P A S S</h2></center>
+        <center><h2>Rizsaf Pvt Ltd</h2></center>
         <nav>
           <ul className="sidebar-menu">
-            <li><NavLink to="/office-staff" className="sidebar-link"><i className="fas fa-tachometer-alt"></i> Dashboard</NavLink></li>
+            <li><NavLink to="/office-staff" className="sidebar-link"><i className="fas fa-tachometer-alt"></i> Office Staff Dashboard</NavLink></li>
           </ul>
         </nav>
       </aside>

@@ -38,7 +38,7 @@ public class AdminService {
     public ResponseEntity<List<OfficeStaffDTO>> listAllStaffs() {
         List<OfficeStaffDTO> staffs = officeStaffRepository.findAll()
                 .stream()
-                .map(ConvertToDto::convertToOfficeStaffDto)
+                .map(ConvertToDto::toOfficeStaffDto)
                 .toList();
         return ResponseEntity.ok(staffs);
     }

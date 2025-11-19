@@ -1,11 +1,19 @@
 package com.RizSafProjectManager.ProjectManager.Utils;
 
-import com.RizSafProjectManager.ProjectManager.Dtos.OfficeStaffDTO;
-import com.RizSafProjectManager.ProjectManager.Models.OfficeStaff;
+import com.RizSafProjectManager.ProjectManager.Dtos.*;
+import com.RizSafProjectManager.ProjectManager.Models.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ConvertToDto {
 
-    public static OfficeStaffDTO convertToOfficeStaffDto(OfficeStaff officeStaff) {
+    /* -------------------------------------------
+       OFFICE STAFF
+     --------------------------------------------*/
+    public static OfficeStaffDTO toOfficeStaffDto(OfficeStaff officeStaff) {
+        if (officeStaff == null) return null;
+
         OfficeStaffDTO dto = new OfficeStaffDTO();
         dto.setId(officeStaff.getId());
         dto.setName(officeStaff.getName());
@@ -14,4 +22,5 @@ public class ConvertToDto {
         dto.setAdharUid(officeStaff.getAdharUid());
         return dto;
     }
+
 }
