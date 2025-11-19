@@ -10,6 +10,7 @@ import AdminWorker from "./Components/AdminWorker";
 import AdminProjects from "./Components/AdminProjects";
 import AdminProjectDetails from "./Components/AdminProjectDetails";
 import AdminActions from "./Components/AdminActions";
+import AdminExpenses from "./Components/AdminExpenses";
 const App = () => {
     return (
         <Router>
@@ -24,6 +25,7 @@ const App = () => {
                 <Route path="/admin/projects" element={<AdminProjects />} />
                 <Route path="/admin/projects/:projectId" element={<AdminProjectDetails />} />
                 <Route path="/admin/actions" element={<AdminActions />} />
+                <Route path="/admin/expenses" element={<AdminExpenses />} />
 
             </Routes>
         </Router>

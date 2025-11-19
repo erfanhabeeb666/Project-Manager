@@ -72,6 +72,11 @@ const AdminOfficeStaff = () => {
                 <i className="fas fa-list"></i> Actions
               </NavLink>
             </li>
+            <li>
+              <NavLink to="/admin/expenses" className="sidebar-link">
+                <i className="fas fa-money-bill-wave"></i> Expenses
+              </NavLink>
+            </li>
           </ul>
         </nav>
       </aside>

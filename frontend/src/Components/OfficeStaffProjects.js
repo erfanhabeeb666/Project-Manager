@@ -27,6 +27,7 @@ const PROJECT_STAGE_OPTIONS = [
 
 const WORK_TYPES = ["ELECTRICAL", "CIB"];
 const ACTION_STATUS_OPTIONS = ["PENDING", "COMPLETED"];
+const EXPENSE_TYPES = ["VISIT", "MATERIAL"];
 
 const initialProjectForm = {
   code: "",
@@ -42,6 +43,14 @@ const initialActionForm = {
   title: "",
   actionDate: "",
   notes: "",
+};
+
+const initialExpenseForm = {
+  type: EXPENSE_TYPES[0],
+  date: "",
+  description: "",
+  items: [{ particular: "", quantity: "", rate: "" }],
+  workerIds: [],
 };
 
 const OfficeStaffProjects = () => {
@@ -82,6 +91,17 @@ const OfficeStaffProjects = () => {
   const [showUpdateProjectModal, setShowUpdateProjectModal] = useState(false);
   const [showChangeStageModal, setShowChangeStageModal] = useState(false);
   const [showLogActionModal, setShowLogActionModal] = useState(false);
+  const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
+
+  const [expenseForm, setExpenseForm] = useState(
+    () => ({ ...initialExpenseForm })
+  );
+  const [expenseSubmitting, setExpenseSubmitting] = useState(false);
+  const [expenseSuccess, setExpenseSuccess] = useState("");
+  const [expenseError, setExpenseError] = useState("");
+  const [workers, setWorkers] = useState([]);
+  const [workersLoading, setWorkersLoading] = useState(false);
+  const [viewingExpense, setViewingExpense] = useState(null);
 
   const [updateForm, setUpdateForm] = useState({
     expectedEndDate: "",
@@ -186,10 +206,14 @@ const OfficeStaffProjects = () => {
       setUpdateForm({ expectedEndDate: "", sanctionedAmount: "" });
     }
     setActionForm({ ...initialActionForm });
+    setActionForm({ ...initialActionForm });
+    setExpenseForm({ ...initialExpenseForm });
     setStageSuccess("");
     setStageError("");
     setActionSuccess("");
     setActionError("");
+    setExpenseSuccess("");
+    setExpenseError("");
     setUpdateFormSuccess("");
     setUpdateFormErrors({});
   }, [selectedProject]);
@@ -352,6 +376,116 @@ const OfficeStaffProjects = () => {
       handleApiError(error, setActionError);
     } finally {
       setActionStatusLoading((prev) => ({ ...prev, [actionId]: false }));
+    }
+  };
+
+  const fetchWorkers = useCallback(async () => {
+    requireAuth();
+    setWorkersLoading(true);
+    try {
+      const response = await axios.get(
+        `${apiUrl}office-staff/workers`,
+        { headers: authHeaders() }
+      );
+      setWorkers(response?.data?.data ?? []);
+    } catch (error) {
+      console.error("Failed to fetch workers", error);
+      handleApiError(error);
+    } finally {
+      setWorkersLoading(false);
+    }
+  }, [apiUrl, requireAuth, handleApiError]);
+
+  const handleExpenseFormChange = (e) => {
+    const { name, value } = e.target;
+    setExpenseForm((prev) => ({ ...prev, [name]: value }));
+    setExpenseError("");
+    setExpenseSuccess("");
+  };
+
+  const handleExpenseItemChange = (index, field, value) => {
+    setExpenseForm((prev) => {
+      const newItems = [...prev.items];
+      newItems[index] = { ...newItems[index], [field]: value };
+      return { ...prev, items: newItems };
+    });
+    setExpenseError("");
+  };
+
+  const addExpenseItem = () => {
+    setExpenseForm((prev) => ({
+      ...prev,
+      items: [...prev.items, { particular: "", quantity: "", rate: "" }],
+    }));
+  };
+
+  const removeExpenseItem = (index) => {
+    if (expenseForm.items.length > 1) {
+      setExpenseForm((prev) => ({
+        ...prev,
+        items: prev.items.filter((_, i) => i !== index),
+      }));
+    }
+  };
+
+  const submitExpense = async (e) => {
+    e.preventDefault();
+    if (!selectedProject) return;
+    if (!expenseForm.type || !expenseForm.date) {
+      setExpenseError("Type and date are required");
+      return;
+    }
+    if (!expenseForm.items || expenseForm.items.length === 0) {
+      setExpenseError("At least one expense item is required");
+      return;
+    }
+    requireAuth();
+    setExpenseSubmitting(true);
+    setExpenseSuccess("");
+    setExpenseError("");
+    try {
+      const items = expenseForm.items
+        .filter(
+          (item) =>
+            item.particular?.trim() &&
+            item.quantity !== "" &&
+            item.rate !== ""
+        )
+        .map((item) => ({
+          particular: item.particular.trim(),
+          quantity: Number(item.quantity) || 0,
+          rate: Number(item.rate) || 0,
+        }));
+
+      if (items.length === 0) {
+        setExpenseError("At least one valid expense item is required");
+        setExpenseSubmitting(false);
+        return;
+      }
+
+      const payload = {
+        type: expenseForm.type,
+        projectId: selectedProject.id,
+        date: expenseForm.date,
+        description: expenseForm.description?.trim() || null,
+        items: items,
+        workerIds: expenseForm.type === "VISIT" && expenseForm.workerIds?.length > 0 
+          ? expenseForm.workerIds 
+          : null,
+      };
+      await axios.post(
+        `${apiUrl}office-staff/expenses`,
+        payload,
+        { headers: authHeaders() }
+      );
+      setExpenseSuccess("Expense added successfully");
+      setExpenseForm({ ...initialExpenseForm });
+      setShowAddExpenseModal(false);
+      await fetchProjects(page);
+    } catch (error) {
+      handleApiError(error, setExpenseError);
+    } finally {
+      setExpenseSubmitting(false);
     }
   };
 
@@ -810,6 +944,12 @@ const OfficeStaffProjects = () => {
                         : "—"}
                     </p>
                   </div>
+                  <div>
+                    <p className="label">Total Expense</p>
+                    <p>
+                      ₹{selectedProject.totalExpense?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="detail-grid" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
@@ -836,6 +976,19 @@ const OfficeStaffProjects = () => {
                     style={{ padding: '12px 24px' }}
                   >
                     Log Action
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => {
+                      setShowAddExpenseModal(true);
+                      if (!workers.length && !workersLoading) {
+                        fetchWorkers();
+                      }
+                    }}
+                    style={{ padding: '12px 24px' }}
+                  >
+                    Add Expense
                   </button>
                 </div>
 
@@ -903,6 +1056,67 @@ const OfficeStaffProjects = () => {
                   ) : (
                     <p className="muted-text">
                       No actions logged yet. Use the form above to add one.
+                    </p>
+                  )}
+                </div>
+
+                <div className="actions-section">
+                  <div className="actions-header">
+                    <h4>Project Expenses</h4>
+                    <span className="muted-text">
+                      {selectedProject.expenses?.length || 0} total
+                    </span>
+                  </div>
+                  {selectedProject.expenses?.length ? (
+                    <div className="actions-table-wrapper">
+                      <table className="main-table">
+                        <thead>
+                          <tr>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Total Amount</th>
+                            <th>Items Count</th>
+                            <th>Workers</th>
+                            <th>Created By</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedProject.expenses.map((expense) => (
+                            <tr key={expense.id}>
+                              <td>{expense.type}</td>
+                              <td>{expense.date ?? "—"}</td>
+                              <td>{expense.description ?? "—"}</td>
+                              <td>₹{expense.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}</td>
+                              <td>{expense.items?.length ?? 0}</td>
+                              <td>
+                                {expense.workers && expense.workers.length > 0 ? (
+                                  <span>{expense.workers.length} worker(s)</span>
+                                ) : (
+                                  "—"
+                                )}
+                              </td>
+                              <td>{expense.createdByName ?? "—"}</td>
+                              <td>{expense.createdAt?.split("T")[0] ?? "—"}</td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="btn-outline btn-small"
+                                  onClick={() => setViewingExpense(expense)}
+                                >
+                                  View Details
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="muted-text">
+                      No expenses recorded for this project.
                     </p>
                   )}
                 </div>
@@ -1110,6 +1324,278 @@ const OfficeStaffProjects = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Expense Modal */}
+      {showAddExpenseModal && (
+        <div className="modal-overlay" onClick={() => setShowAddExpenseModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <form onSubmit={submitExpense}>
+              <h3>Add Expense</h3>
+              {expenseError && (
+                <p className="error-text">{expenseError}</p>
+              )}
+              {expenseSuccess && (
+                <p className="success-text">{expenseSuccess}</p>
+              )}
+              <label>
+                Type *
+                <select
+                  name="type"
+                  value={expenseForm.type}
+                  onChange={handleExpenseFormChange}
+                  required
+                >
+                  {EXPENSE_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Date *
+                <input
+                  type="date"
+                  name="date"
+                  value={expenseForm.date}
+                  onChange={handleExpenseFormChange}
+                  required
+                />
+              </label>
+              <label>
+                Description
+                <textarea
+                  rows={3}
+                  name="description"
+                  value={expenseForm.description}
+                  onChange={handleExpenseFormChange}
+                  placeholder="Optional description"
+                />
+              </label>
+              {expenseForm.type === "VISIT" && (
+                <label>
+                  Assign Workers
+                  {workersLoading ? (
+                    <p className="muted-text">Loading workers...</p>
+                  ) : (
+                    <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #ddd', padding: '10px', borderRadius: '4px' }}>
+                      {workers.length === 0 ? (
+                        <p className="muted-text">No workers available</p>
+                      ) : (
+                        workers.map((worker) => (
+                          <label key={worker.id} style={{ display: 'block', marginBottom: '8px' }}>
+                            <input
+                              type="checkbox"
+                              checked={expenseForm.workerIds?.includes(worker.id) || false}
+                              onChange={(e) => {
+                                const workerId = worker.id;
+                                setExpenseForm((prev) => {
+                                  const currentIds = prev.workerIds || [];
+                                  if (e.target.checked) {
+                                    return { ...prev, workerIds: [...currentIds, workerId] };
+                                  } else {
+                                    return { ...prev, workerIds: currentIds.filter(id => id !== workerId) };
+                                  }
+                                });
+                              }}
+                              style={{ marginRight: '8px' }}
+                            />
+                            {worker.name} {worker.mobileNumber && `(${worker.mobileNumber})`}
+                          </label>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </label>
+              )}
+              <div style={{ marginTop: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <h4>Expense Items *</h4>
+                  <button
+                    type="button"
+                    onClick={addExpenseItem}
+                    className="btn-outline"
+                    style={{ padding: '6px 12px' }}
+                  >
+                    + Add Item
+                  </button>
+                </div>
+                {expenseForm.items.map((item, index) => (
+                  <div key={index} style={{ border: '1px solid #ddd', padding: '15px', marginBottom: '10px', borderRadius: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <strong>Item {index + 1}</strong>
+                      {expenseForm.items.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeExpenseItem(index)}
+                          className="btn-cancel"
+                          style={{ padding: '4px 8px', fontSize: '12px' }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <label style={{ display: 'block', marginBottom: '10px' }}>
+                      Particular *
+                      <input
+                        type="text"
+                        value={item.particular}
+                        onChange={(e) => handleExpenseItemChange(index, 'particular', e.target.value)}
+                        placeholder="Item description"
+                        required
+                      />
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <label>
+                        Quantity *
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={item.quantity}
+                          onChange={(e) => handleExpenseItemChange(index, 'quantity', e.target.value)}
+                          placeholder="0"
+                          required
+                        />
+                      </label>
+                      <label>
+                        Rate *
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.rate}
+                          onChange={(e) => handleExpenseItemChange(index, 'rate', e.target.value)}
+                          placeholder="0.00"
+                          required
+                        />
+                      </label>
+                    </div>
+                    {item.quantity && item.rate && (
+                      <p style={{ marginTop: '8px', color: '#666', fontSize: '14px' }}>
+                        Amount: ₹{(Number(item.quantity) * Number(item.rate)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="form-actions">
+                <button type="submit" disabled={expenseSubmitting}>
+                  {expenseSubmitting ? "Saving..." : "Add Expense"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => {
+                    setShowAddExpenseModal(false);
+                    setExpenseError("");
+                    setExpenseSuccess("");
+                    setExpenseForm({ ...initialExpenseForm });
+                  }}
+                  onMouseEnter={() => {
+                    if (!workers.length && !workersLoading) {
+                      fetchWorkers();
+                    }
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Expense Details Modal */}
+      {viewingExpense && (
+        <div className="modal-overlay" onClick={() => setViewingExpense(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3>Expense Details</h3>
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                <div>
+                  <strong>Type:</strong> {viewingExpense.type}
+                </div>
+                <div>
+                  <strong>Date:</strong> {viewingExpense.date ?? "—"}
+                </div>
+                <div>
+                  <strong>Total Amount:</strong> ₹{viewingExpense.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}
+                </div>
+                <div>
+                  <strong>Created By:</strong> {viewingExpense.createdByName ?? "—"}
+                </div>
+                <div>
+                  <strong>Created At:</strong> {viewingExpense.createdAt?.split("T")[0] ?? "—"}
+                </div>
+              </div>
+              {viewingExpense.description && (
+                <div style={{ marginBottom: '15px' }}>
+                  <strong>Description:</strong>
+                  <p style={{ marginTop: '5px', whiteSpace: 'pre-wrap' }}>{viewingExpense.description}</p>
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <h4>Expense Items</h4>
+              {viewingExpense.items && viewingExpense.items.length > 0 ? (
+                <table className="main-table">
+                  <thead>
+                    <tr>
+                      <th>Particular</th>
+                      <th>Quantity</th>
+                      <th>Rate</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {viewingExpense.items.map((item, index) => (
+                      <tr key={item.id || index}>
+                        <td>{item.particular ?? "—"}</td>
+                        <td>{item.quantity ?? "—"}</td>
+                        <td>₹{item.rate?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}</td>
+                        <td>₹{item.amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="muted-text">No items recorded</p>
+              )}
+            </div>
+
+            {viewingExpense.workers && viewingExpense.workers.length > 0 && (
+              <div style={{ marginBottom: '20px' }}>
+                <h4>Assigned Workers ({viewingExpense.workers.length})</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
+                  {viewingExpense.workers.map((worker) => (
+                    <div key={worker.id} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}>
+                      <div><strong>{worker.name}</strong></div>
+                      {worker.mobileNumber && (
+                        <div className="muted-text" style={{ fontSize: '14px' }}>{worker.mobileNumber}</div>
+                      )}
+                      {worker.adharUid && (
+                        <div className="muted-text" style={{ fontSize: '12px' }}>Aadhar: {worker.adharUid}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => setViewingExpense(null)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

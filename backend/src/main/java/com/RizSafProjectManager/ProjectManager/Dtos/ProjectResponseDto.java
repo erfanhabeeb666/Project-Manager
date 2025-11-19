@@ -1,11 +1,16 @@
 package com.RizSafProjectManager.ProjectManager.Dtos;
+
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Instant;
 import java.util.List;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ProjectResponseDto {
     private Long id;
     private String code;
@@ -19,5 +24,7 @@ public class ProjectResponseDto {
     private String stage;
     private String createdById;
     private Instant createdAt;
+    private Double totalExpense;
     private List<ProjectActionDto> actions;
+    private List<ExpenseResponseDto> expenses;
 }

@@ -12,6 +12,7 @@ const AdminProjectDetails = () => {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [viewingExpense, setViewingExpense] = useState(null);
 
   const fetchProject = useCallback(async () => {
     if (!projectId) return;
@@ -47,6 +48,7 @@ const AdminProjectDetails = () => {
   };
 
   const projectActions = project?.actions ?? [];
+  const projectExpenses = project?.expenses ?? [];
 
   return (
     <div className="dashboard-container">
@@ -79,6 +81,11 @@ const AdminProjectDetails = () => {
             <li>
               <NavLink to="/admin/actions" className="sidebar-link">
                 <i className="fas fa-list"></i> Actions
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/admin/expenses" className="sidebar-link">
+                <i className="fas fa-money-bill-wave"></i> Expenses
               </NavLink>
             </li>
           </ul>
@@ -140,6 +147,10 @@ const AdminProjectDetails = () => {
                     <span className="label">Created On</span>
                     <strong>{project.createdAt?.split("T")[0] ?? "-"}</strong>
                   </div>
+                  <div className="info-card">
+                    <span className="label">Total Expense</span>
+                    <strong>₹{project.totalExpense?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}</strong>
+                  </div>
                 </div>
               </div>
 
@@ -178,10 +189,157 @@ const AdminProjectDetails = () => {
                   </tbody>
                 </table>
               </div>
+
+              <div className="section">
+                <h3>Expenses</h3>
+                <table className="main-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Date</th>
+                      <th>Description</th>
+                      <th>Total Amount</th>
+                      <th>Items Count</th>
+                      <th>Workers</th>
+                      <th>Created By</th>
+                      <th>Created At</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projectExpenses.length === 0 ? (
+                      <tr>
+                        <td colSpan="9" style={{ textAlign: "center", padding: "20px" }}>
+                          No expenses recorded for this project
+                        </td>
+                      </tr>
+                    ) : (
+                      projectExpenses.map((expense) => (
+                        <tr key={expense.id}>
+                          <td>{expense.type}</td>
+                          <td>{expense.date ?? "-"}</td>
+                          <td>{expense.description ?? "-"}</td>
+                          <td>₹{expense.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}</td>
+                          <td>{expense.items?.length ?? 0}</td>
+                          <td>
+                            {expense.workers && expense.workers.length > 0 ? (
+                              <span>{expense.workers.length} worker(s)</span>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                          <td>{expense.createdByName ?? "-"}</td>
+                          <td>{expense.createdAt?.split("T")[0] ?? "-"}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn-outline btn-small"
+                              onClick={() => setViewingExpense(expense)}
+                            >
+                              View Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </>
           )}
         </section>
       </main>
+
+      {/* View Expense Details Modal */}
+      {viewingExpense && (
+        <div className="modal-overlay" onClick={() => setViewingExpense(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3>Expense Details</h3>
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                <div>
+                  <strong>Type:</strong> {viewingExpense.type}
+                </div>
+                <div>
+                  <strong>Date:</strong> {viewingExpense.date ?? "—"}
+                </div>
+                <div>
+                  <strong>Total Amount:</strong> ₹{viewingExpense.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}
+                </div>
+                <div>
+                  <strong>Created By:</strong> {viewingExpense.createdByName ?? "—"}
+                </div>
+                <div>
+                  <strong>Created At:</strong> {viewingExpense.createdAt?.split("T")[0] ?? "—"}
+                </div>
+              </div>
+              {viewingExpense.description && (
+                <div style={{ marginBottom: '15px' }}>
+                  <strong>Description:</strong>
+                  <p style={{ marginTop: '5px', whiteSpace: 'pre-wrap' }}>{viewingExpense.description}</p>
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <h4>Expense Items</h4>
+              {viewingExpense.items && viewingExpense.items.length > 0 ? (
+                <table className="main-table">
+                  <thead>
+                    <tr>
+                      <th>Particular</th>
+                      <th>Quantity</th>
+                      <th>Rate</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {viewingExpense.items.map((item, index) => (
+                      <tr key={item.id || index}>
+                        <td>{item.particular ?? "—"}</td>
+                        <td>{item.quantity ?? "—"}</td>
+                        <td>₹{item.rate?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}</td>
+                        <td>₹{item.amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="muted-text">No items recorded</p>
+              )}
+            </div>
+
+            {viewingExpense.workers && viewingExpense.workers.length > 0 && (
+              <div style={{ marginBottom: '20px' }}>
+                <h4>Assigned Workers ({viewingExpense.workers.length})</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
+                  {viewingExpense.workers.map((worker) => (
+                    <div key={worker.id} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}>
+                      <div><strong>{worker.name}</strong></div>
+                      {worker.mobileNumber && (
+                        <div className="muted-text" style={{ fontSize: '14px' }}>{worker.mobileNumber}</div>
+                      )}
+                      {worker.adharUid && (
+                        <div className="muted-text" style={{ fontSize: '12px' }}>Aadhar: {worker.adharUid}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => setViewingExpense(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -12,9 +12,14 @@ import java.util.List;
 
 @Entity
 @Table(name = "project")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Project {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(length = 100, unique = true)
@@ -53,17 +58,19 @@ public class Project {
     @Column(name = "created_at")
     private Instant createdAt = Instant.now();
 
+    @Column(name = "total_expense")
+    private Double totalExpense = 0.0;
+
     @Version
     private Long version;
 
-    @OneToMany(
-            mappedBy = "project",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY
-    )
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("actionDate ASC, id ASC")
     private List<ProjectAction> actions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("date DESC, createdAt DESC")
+    private List<Expense> expenses = new ArrayList<>();
 
     // helpers
     public void addAction(ProjectAction action) {

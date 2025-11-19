@@ -4,8 +4,10 @@ import com.RizSafProjectManager.ProjectManager.Dtos.*;
 import com.RizSafProjectManager.ProjectManager.Enums.ActionStatus;
 import com.RizSafProjectManager.ProjectManager.Enums.ProjectStage;
 import com.RizSafProjectManager.ProjectManager.Enums.WorkType;
+import com.RizSafProjectManager.ProjectManager.Models.Expense;
 import com.RizSafProjectManager.ProjectManager.Models.Project;
 import com.RizSafProjectManager.ProjectManager.Models.ProjectAction;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -14,6 +16,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProjectMapperImpl implements ProjectMapper {
+
+    @Autowired
+    private ExpenseMapperImpl expenseMapper;
 
     // -----------------------------
     // Project → ProjectResponseDto
@@ -36,7 +41,9 @@ public class ProjectMapperImpl implements ProjectMapper {
                 .stage(project.getStage() != null ? project.getStage().name() : null)
                 .createdById(project.getCreatedBy() != null ? project.getCreatedBy().getName() : null)
                 .createdAt(project.getCreatedAt())
+                .totalExpense(project.getTotalExpense())
                 .actions(actionsToDtoList(project.getActions()))
+                .expenses(expensesToDtoList(project.getExpenses()))
                 .build();
     }
 
@@ -119,6 +126,17 @@ public class ProjectMapperImpl implements ProjectMapper {
             return Collections.emptyList();
         return actions.stream()
                 .map(this::actionToDto)
+                .collect(Collectors.toList());
+    }
+
+    // -----------------------------
+    // List<Expense> → List<ExpenseResponseDto>
+    // -----------------------------
+    private List<ExpenseResponseDto> expensesToDtoList(List<Expense> expenses) {
+        if (expenses == null || expenses.isEmpty())
+            return Collections.emptyList();
+        return expenses.stream()
+                .map(expenseMapper::toDto)
                 .collect(Collectors.toList());
     }
 }
