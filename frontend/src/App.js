@@ -13,6 +13,8 @@ import AdminActions from "./Components/AdminActions";
 import AdminExpenses from "./Components/AdminExpenses";
 import CreateBill from "./Components/CreateBill";
 import BillsHistory from "./Components/BillsHistory";
+import LsgdList from "./Components/Lsgd/LsgdList";
+import LsgdDetail from "./Components/Lsgd/LsgdDetail";
 const App = () => {
     return (
         <Router>
@@ -31,6 +33,12 @@ const App = () => {
                 <Route path="/admin/projects/:projectId" element={<AdminProjectDetails />} />
                 <Route path="/admin/actions" element={<AdminActions />} />
                 <Route path="/admin/expenses" element={<AdminExpenses />} />
+
+                {/* LSGD Routes */}
+                <Route path="/admin/lsgds" element={<LsgdList role="ADMIN" />} />
+                <Route path="/admin/lsgds/:id" element={<LsgdDetail role="ADMIN" />} />
+                <Route path="/office-staff/lsgds" element={<LsgdList role="OFFICE_STAFF" />} />
+                <Route path="/office-staff/lsgds/:id" element={<LsgdDetail role="OFFICE_STAFF" />} />
 
             </Routes>
         </Router>

@@ -43,6 +43,11 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
                             </NavLink>
                         </li>
                         <li>
+                            <NavLink to="/admin/lsgds" className="sidebar-link" onClick={toggleSidebar}>
+                                <i className="fas fa-building"></i> LSGD Management
+                            </NavLink>
+                        </li>
+                        <li>
                             <NavLink to="/admin/bills-history" className="sidebar-link" onClick={toggleSidebar}>
                                 <i className="fas fa-file-invoice-dollar"></i> Bills History
                             </NavLink>

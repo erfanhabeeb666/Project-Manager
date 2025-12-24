@@ -29,6 +29,11 @@ const OfficeSidebar = ({ isOpen, toggleSidebar }) => {
                                 <i className="fas fa-calendar-day"></i> Daily Actions
                             </NavLink>
                         </li>
+                        <li>
+                            <NavLink to="/office-staff/lsgds" className="sidebar-link" onClick={toggleSidebar}>
+                                <i className="fas fa-building"></i> LSGD Management
+                            </NavLink>
+                        </li>
 
                         <li className="menu-header" style={{ color: '#94a3b8', padding: '10px 20px', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em' }}>
                             Billing
