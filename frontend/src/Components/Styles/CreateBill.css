@@ -1,0 +1,169 @@
+/* CreateBill.css */
+/* Container styles handled by Main.css (dashboard-container, main-content) */
+
+.bill-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    padding: 2.5rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.bill-header-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 1rem;
+}
+
+.bill-section {
+    margin-bottom: 2.5rem;
+}
+
+.bill-section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-left: 4px solid #3b82f6;
+    padding-left: 10px;
+}
+
+.input-group-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.input-field-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-label {
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.styled-input,
+.styled-textarea {
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    background: #f9fafb;
+}
+
+.styled-input:focus,
+.styled-textarea:focus {
+    border-color: #3b82f6;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    outline: none;
+}
+
+.readonly-input {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    cursor: default;
+    font-weight: 600;
+}
+
+.tax-breakdown-card {
+    background: linear-gradient(145deg, #f8fafc, #edf2f7);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    color: #64748b;
+}
+
+.breakdown-row.total-row {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px dashed #cbd5e1;
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: #1e293b;
+}
+
+.amount-words-banner {
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    font-style: italic;
+    font-weight: 500;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+}
+
+.submit-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.success-area {
+    margin-top: 2rem;
+    text-align: center;
+    background: #ecfdf5;
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid #10b981;
+}
+
+.download-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #10b981;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.download-link:hover {
+    background: #059669;
+}

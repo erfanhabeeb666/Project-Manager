@@ -6,6 +6,7 @@ import "./Styles/Main.css";
 import "./Styles/Admin.css";
 import "./Styles/Sidebar.css";
 import "./Styles/OfficeStaff.css";
+import OfficeSidebar from "./OfficeSidebar";
 
 const ACTION_STATUS_OPTIONS = ["PENDING", "COMPLETED"];
 
@@ -25,6 +26,11 @@ const OfficeStaffDailyActions = () => {
   const [actionStatusLoading, setActionStatusLoading] = useState({});
   const [sortField, setSortField] = useState("actionDate");
   const [sortDirection, setSortDirection] = useState("asc");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   const authHeaders = () => {
     const token = localStorage.getItem("jwtToken");
@@ -116,12 +122,12 @@ const OfficeStaffDailyActions = () => {
   const sortedActions = useMemo(() => {
     // Filter out STAGE_CHANGE actions
     const filteredActions = datedActions.filter(action => action.actionType !== "STAGE_CHANGE");
-    
+
     if (!filteredActions.length) return [];
-    
+
     const sorted = [...filteredActions].sort((a, b) => {
       let aValue, bValue;
-      
+
       switch (sortField) {
         case "projectName":
           aValue = (a.projectName || "").toLowerCase();
@@ -146,12 +152,12 @@ const OfficeStaffDailyActions = () => {
         default:
           return 0;
       }
-      
+
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-    
+
     return sorted;
   }, [datedActions, sortField, sortDirection]);
 
@@ -166,9 +172,8 @@ const OfficeStaffDailyActions = () => {
 
   const renderStatusBadge = (status) => (
     <span
-      className={`status-badge ${
-        status === "COMPLETED" ? "status-complete" : "status-pending"
-      }`}
+      className={`status-badge ${status === "COMPLETED" ? "status-complete" : "status-pending"
+        }`}
     >
       {status || "PENDING"}
     </span>
@@ -176,35 +181,16 @@ const OfficeStaffDailyActions = () => {
 
   return (
     <div className="dashboard-container">
-      <aside className="sidebar">
-        <center>
-          <h2>Rizsaf Pvt Ltd</h2>
-        </center>
-        <nav>
-          <ul className="sidebar-menu">
-            <li>
-              <NavLink to="/office-staff" className="sidebar-link">
-                <i className="fas fa-tachometer-alt"></i> Office Staff
-                Dashboard
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/office-staff/projects" className="sidebar-link">
-                <i className="fas fa-project-diagram"></i> Projects
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/office-staff/daily-actions" className="sidebar-link">
-                <i className="fas fa-calendar-day"></i> Daily Actions
-              </NavLink>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+      <OfficeSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
       <main className="main-content">
         <header className="topbar">
-          <h1>Office Staff Workspace - Daily Actions</h1>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button className="hamburger-btn" onClick={toggleSidebar}>
+              <i className="fas fa-bars"></i>
+            </button>
+            <h1>Office Staff Workspace - Daily Actions</h1>
+          </div>
           <div className="topbar-actions">
             <span className="greeting">Hello, {getDisplayName()}</span>
             <button className="logout-btn" onClick={handleLogout}>
@@ -320,11 +306,10 @@ const OfficeStaffDailyActions = () => {
                               <button
                                 key={status}
                                 type="button"
-                                className={`btn-small ${
-                                  action.status === status
-                                    ? "btn-selected"
-                                    : "btn-outline"
-                                }`}
+                                className={`btn-small ${action.status === status
+                                  ? "btn-selected"
+                                  : "btn-outline"
+                                  }`}
                                 disabled={
                                   action.status === status ||
                                   actionStatusLoading[action.id] ||
@@ -339,7 +324,7 @@ const OfficeStaffDailyActions = () => {
                                 }
                               >
                                 {actionStatusLoading[action.id] &&
-                                action.status !== status
+                                  action.status !== status
                                   ? "Updating..."
                                   : status}
                               </button>
@@ -360,4 +345,3 @@ const OfficeStaffDailyActions = () => {
 };
 
 export default OfficeStaffDailyActions;
-

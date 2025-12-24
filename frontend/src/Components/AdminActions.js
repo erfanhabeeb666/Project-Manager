@@ -5,6 +5,7 @@ import "./Styles/Admin.css";
 import "./Styles/Main.css";
 import "./Styles/Sidebar.css";
 import { getDisplayName } from "../utils/auth";
+import AdminSidebar from "./AdminSidebar";
 
 const AdminActions = () => {
   const navigate = useNavigate();
@@ -12,6 +13,11 @@ const AdminActions = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   const fetchActions = useCallback(
     async (date) => {
@@ -65,49 +71,17 @@ const AdminActions = () => {
 
   return (
     <div className="dashboard-container">
-      <aside className="sidebar">
-        <center>
-          <h2>Rizsaf Pvt Ltd</h2>
-        </center>
-        <nav>
-          <ul className="sidebar-menu">
-            <li>
-              <NavLink to="/admin" className="sidebar-link">
-                <i className="fas fa-tachometer-alt"></i> Dashboard
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/admin/office-staff" className="sidebar-link">
-                <i className="fas fa-users"></i> Office Staff
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/admin/worker" className="sidebar-link">
-                <i className="fas fa-hard-hat"></i> Workers
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/admin/projects" className="sidebar-link">
-                <i className="fas fa-project-diagram"></i> Projects
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/admin/actions" className="sidebar-link">
-                <i className="fas fa-list"></i> Actions
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/admin/expenses" className="sidebar-link">
-                <i className="fas fa-money-bill-wave"></i> Expenses
-              </NavLink>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+      {/* Sidebar */}
+      <AdminSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
       <main className="main-content">
         <header className="topbar">
-          <h1>Project Manager Dashboard</h1>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button className="hamburger-btn" onClick={toggleSidebar}>
+              <i className="fas fa-bars"></i>
+            </button>
+            <h1>Project Manager Dashboard</h1>
+          </div>
           <div className="topbar-actions">
             <span className="greeting">Hello, {getDisplayName()}</span>
             <button className="logout-btn" onClick={handleLogout}>

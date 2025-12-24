@@ -6,10 +6,16 @@ import './Styles/Main.css';
 import './Styles/Sidebar.css';
 import { getDisplayName } from "../utils/auth";
 import AddOfficeStaff from "./AddOfficeStaff";
+import AdminSidebar from "./AdminSidebar";
 
 const AdminOfficeStaff = () => {
   const [officeStaffList, setOfficeStaffList] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   const fetchOfficeStaff = async () => {
     try {
@@ -35,62 +41,31 @@ const AdminOfficeStaff = () => {
     setShowAddForm(false);
   };
 
-    const navigate = useNavigate();
-    const handleLogout = () => {
-        localStorage.removeItem("jwtToken");
-        navigate("/");
-    };
-    return (
-        <div className="dashboard-container">
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    localStorage.removeItem("jwtToken");
+    navigate("/");
+  };
+  return (
+    <div className="dashboard-container">
       {/* Sidebar */}
-      <aside className="sidebar">
-        <center><h2>Rizsaf Pvt Ltd</h2></center>
-        <nav>
-          <ul className="sidebar-menu">
-            <li>
-              <NavLink to="/admin" className="sidebar-link">
-                <i className="fas fa-tachometer-alt"></i> Dashboard
-              </NavLink>
-            </li>
-             <li>
-              <NavLink to="/admin/office-staff" className="sidebar-link">
-                <i className="fas fa-users"></i> Office Staff
-              </NavLink>
-            </li>
-            <li>
-                          <NavLink to="/admin/worker" className="sidebar-link">
-                            <i className="fas fa-hard-hat"></i> Workers
-                          </NavLink>
-                        </li>
-            <li>
-              <NavLink to="/admin/projects" className="sidebar-link">
-                <i className="fas fa-project-diagram"></i> Projects
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/admin/actions" className="sidebar-link">
-                <i className="fas fa-list"></i> Actions
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/admin/expenses" className="sidebar-link">
-                <i className="fas fa-money-bill-wave"></i> Expenses
-              </NavLink>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+      <AdminSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
       {/* Main Content */}
       <main className="main-content">
         <header className="topbar">
-          <h1>Project Manager Dashboard</h1>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button className="hamburger-btn" onClick={toggleSidebar}>
+              <i className="fas fa-bars"></i>
+            </button>
+            <h1>Project Manager Dashboard</h1>
+          </div>
           <div className="topbar-actions">
             <span className="greeting">Hello, {getDisplayName()}</span>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
         </header>
-        <div className="mb-4 flex space-x-4" style={{ marginBottom: "20px" ,marginTop:"50px" }}>
+        <div className="mb-4 flex space-x-4" style={{ marginBottom: "20px", marginTop: "20px" }}>
           <button onClick={() => setShowAddForm(true)}>+ Add staff</button>
           <button onClick={() => fetchOfficeStaff()} style={{ marginLeft: "15px" }}>Refresh List</button>
         </div>
@@ -135,9 +110,9 @@ const AdminOfficeStaff = () => {
             </tbody>
           </table>
         </div>
-        </main>
+      </main>
     </div>
-    );
+  );
 };
 
 export default AdminOfficeStaff;

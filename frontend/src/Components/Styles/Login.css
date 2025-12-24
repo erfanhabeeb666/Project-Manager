@@ -1,13 +1,113 @@
-/* Login.css */
-
-/* General container styling */
+/* Login Styles */
 .login-container {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
-    background-color: #f4f7fa;
+    min-height: 100vh;
+    background: radial-gradient(circle at top right, #e0e7ff, var(--bg-body), #f1f5f9);
+    padding: var(--space-md);
+}
+
+.form-box {
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-box h2 {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+    color: var(--primary-color);
+    font-size: 1.75rem;
+    font-weight: 800;
+}
+
+.form-box input {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: var(--space-lg);
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    transition: all var(--transition-fast);
+}
+
+.form-box input:focus {
+    background: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.form-box button {
+    width: 100%;
+    padding: 14px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-top: var(--space-md);
+}
+
+.form-box button:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+}
+
+.error {
+    background-color: #fef2f2;
+    color: var(--danger-color);
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    margin-top: var(--space-lg);
+    text-align: center;
+    border: 1px solid #fee2e2;
+    display: none;
+}
+
+.error.show {
+    display: block;
+    animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
 }
 
 h2 {

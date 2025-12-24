@@ -11,6 +11,8 @@ import AdminProjects from "./Components/AdminProjects";
 import AdminProjectDetails from "./Components/AdminProjectDetails";
 import AdminActions from "./Components/AdminActions";
 import AdminExpenses from "./Components/AdminExpenses";
+import CreateBill from "./Components/CreateBill";
+import BillsHistory from "./Components/BillsHistory";
 const App = () => {
     return (
         <Router>
@@ -20,6 +22,9 @@ const App = () => {
                 <Route path="/office-staff" element={<OfficeStaff />} />
                 <Route path="/office-staff/projects" element={<OfficeStaffProjects />} />
                 <Route path="/office-staff/daily-actions" element={<OfficeStaffDailyActions />} />
+                <Route path="/office-staff/create-bill" element={<CreateBill />} />
+                <Route path="/office-staff/bills-history" element={<BillsHistory role="OFFICE_STAFF" />} />
+                <Route path="/admin/bills-history" element={<BillsHistory role="ADMIN" />} />
                 <Route path="/admin/office-staff" element={<AdminOfficeStaff />} />
                 <Route path="/admin/worker" element={<AdminWorker />} />
                 <Route path="/admin/projects" element={<AdminProjects />} />

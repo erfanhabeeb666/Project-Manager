@@ -6,12 +6,18 @@ import "./Styles/Main.css";
 import "./Styles/Admin.css";
 import "./Styles/Sidebar.css";
 import "./Styles/OfficeStaff.css";
+import OfficeSidebar from "./OfficeSidebar";
 
 const OfficeStaff = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   const fetchStats = useCallback(async () => {
     try {
@@ -19,7 +25,9 @@ const OfficeStaff = () => {
       setError("");
       const token = localStorage.getItem("jwtToken");
       const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await axios.get(`${apiUrl}office-staff/dashboard/stats`, {
+      const baseUrl = apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`;
+
+      const response = await axios.get(`${baseUrl}office-staff/dashboard/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setStats(response?.data?.data ?? null);
@@ -40,41 +48,36 @@ const OfficeStaff = () => {
     fetchStats();
   }, [fetchStats]);
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = () => {
     localStorage.removeItem("jwtToken");
     navigate("/");
-  }, [navigate]);
+  };
 
   const formatCurrency = (value) => {
     if (value === null || value === undefined) return "₹0.00";
-    return `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `₹${value.toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   };
 
   const renderBarChart = (data, maxValue) => {
     if (!data || Object.keys(data).length === 0) return null;
     return (
-      <div style={{ marginTop: '15px' }}>
+      <div className="chart-container">
         {Object.entries(data).map(([key, value]) => {
           const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
           return (
-            <div key={key} style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ fontSize: '14px' }}>{key.replace(/_/g, ' ')}</span>
-                <span style={{ fontWeight: 'bold', fontSize: '14px' }}>{value}</span>
+            <div key={key} className="chart-row">
+              <div className="chart-label-row">
+                <span className="chart-label">{key.replace(/_/g, " ")}</span>
+                <span className="chart-value">{value}</span>
               </div>
-              <div style={{
-                width: '100%',
-                height: '24px',
-                backgroundColor: '#e5e7eb',
-                borderRadius: '4px',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  width: `${percentage}%`,
-                  height: '100%',
-                  backgroundColor: '#3b82f6',
-                  transition: 'width 0.3s ease'
-                }}></div>
+              <div className="progress-bar-bg">
+                <div
+                  className="progress-bar-fill"
+                  style={{ width: `${percentage}%` }}
+                ></div>
               </div>
             </div>
           );
@@ -85,35 +88,16 @@ const OfficeStaff = () => {
 
   return (
     <div className="dashboard-container">
-      <aside className="sidebar">
-        <center>
-          <h2>Rizsaf Pvt Ltd</h2>
-        </center>
-        <nav>
-          <ul className="sidebar-menu">
-            <li>
-              <NavLink to="/office-staff" className="sidebar-link">
-                <i className="fas fa-tachometer-alt"></i> Office Staff
-                Dashboard
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/office-staff/projects" className="sidebar-link">
-                <i className="fas fa-project-diagram"></i> Projects
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/office-staff/daily-actions" className="sidebar-link">
-                <i className="fas fa-calendar-day"></i> Daily Actions
-              </NavLink>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+      <OfficeSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
       <main className="main-content">
         <header className="topbar">
-          <h1>Office Staff Workspace</h1>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button className="hamburger-btn" onClick={toggleSidebar}>
+              <i className="fas fa-bars"></i>
+            </button>
+            <h1>Office Staff Workspace</h1>
+          </div>
           <div className="topbar-actions">
             <span className="greeting">Hello, {getDisplayName()}</span>
             <button className="logout-btn" onClick={handleLogout}>
@@ -123,91 +107,82 @@ const OfficeStaff = () => {
         </header>
 
         <section className="content-area office-staff-content">
-          {loading && <p>Loading dashboard statistics...</p>}
-          {error && <p className="error-text">{error}</p>}
+          {loading && <div className="loading-spinner">Loading dashboard statistics...</div>}
+          {error && <div className="text-danger error-alert">{error}</div>}
 
           {!loading && !error && stats && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginTop: '20px' }}>
+            <div className="grid-container">
               {/* Stat Cards */}
-              <div className="office-card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                  <i className="fas fa-project-diagram" style={{ fontSize: '24px', color: '#3b82f6' }}></i>
-                  <h3 style={{ margin: 0, fontSize: '18px' }}>My Projects</h3>
+              <div className="info-card">
+                <div>
+                  <h3>My Projects</h3>
+                  <div className="stat-value" style={{ fontSize: "32px", fontWeight: "bold" }}>{stats.myProjectsCount ?? 0}</div>
                 </div>
-                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#1f2937' }}>
-                  {stats.myProjectsCount ?? 0}
-                </div>
+                <i className="fas fa-project-diagram text-primary" style={{ fontSize: "24px", opacity: 0.8, alignSelf: 'flex-end' }}></i>
               </div>
 
-              <div className="office-card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                  <i className="fas fa-clock" style={{ fontSize: '24px', color: '#f59e0b' }}></i>
-                  <h3 style={{ margin: 0, fontSize: '18px' }}>Pending Actions</h3>
+              <div className="info-card">
+                <div>
+                  <h3>Pending Actions</h3>
+                  <div className="stat-value" style={{ fontSize: "32px", fontWeight: "bold" }}>{stats.pendingActionsCount ?? 0}</div>
                 </div>
-                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#1f2937' }}>
-                  {stats.pendingActionsCount ?? 0}
-                </div>
+                <i className="fas fa-clock text-warning" style={{ fontSize: "24px", opacity: 0.8, alignSelf: 'flex-end' }}></i>
               </div>
 
-              <div className="office-card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                  <i className="fas fa-check-circle" style={{ fontSize: '24px', color: '#10b981' }}></i>
-                  <h3 style={{ margin: 0, fontSize: '18px' }}>Completed Actions</h3>
+              <div className="info-card">
+                <div>
+                  <h3>Completed Actions</h3>
+                  <div className="stat-value" style={{ fontSize: "32px", fontWeight: "bold" }}>{stats.completedActionsCount ?? 0}</div>
                 </div>
-                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#1f2937' }}>
-                  {stats.completedActionsCount ?? 0}
-                </div>
+                <i className="fas fa-check-circle text-success" style={{ fontSize: "24px", opacity: 0.8, alignSelf: 'flex-end' }}></i>
               </div>
 
-              <div className="office-card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                  <i className="fas fa-calendar-day" style={{ fontSize: '24px', color: '#8b5cf6' }}></i>
-                  <h3 style={{ margin: 0, fontSize: '18px' }}>Today's Actions</h3>
+              <div className="info-card">
+                <div>
+                  <h3>Today's Actions</h3>
+                  <div className="stat-value" style={{ fontSize: "32px", fontWeight: "bold" }}>{stats.totalActionsToday ?? 0}</div>
+                  <div className="text-secondary" style={{ fontSize: "0.85rem", marginTop: "5px" }}>
+                    {stats.pendingActionsToday ?? 0} Pending
+                  </div>
                 </div>
-                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#1f2937' }}>
-                  {stats.totalActionsToday ?? 0}
-                </div>
-                <div style={{ fontSize: '14px', color: '#6b7280', marginTop: '5px' }}>
-                  {stats.pendingActionsToday ?? 0} Pending
-                </div>
+                <i className="fas fa-calendar-day" style={{ fontSize: "24px", color: "#8b5cf6", opacity: 0.8, alignSelf: 'flex-end' }}></i>
               </div>
 
-              <div className="office-card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                  <i className="fas fa-money-bill-wave" style={{ fontSize: '24px', color: '#ef4444' }}></i>
-                  <h3 style={{ margin: 0, fontSize: '18px' }}>Total Expenses</h3>
+              <div className="info-card">
+                <div>
+                  <h3>Total Expenses</h3>
+                  <div className="stat-value" style={{ fontSize: "28px", fontWeight: "bold" }}>{formatCurrency(stats.myProjectsTotalExpenses)}</div>
                 </div>
-                <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#1f2937' }}>
-                  {formatCurrency(stats.myProjectsTotalExpenses)}
-                </div>
+                <i className="fas fa-money-bill-wave text-danger" style={{ fontSize: "24px", opacity: 0.8, alignSelf: 'flex-end' }}></i>
               </div>
 
-              <div className="office-card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                  <i className="fas fa-rupee-sign" style={{ fontSize: '24px', color: '#059669' }}></i>
-                  <h3 style={{ margin: 0, fontSize: '18px' }}>Sanctioned Amount</h3>
+              <div className="info-card">
+                <div>
+                  <h3>Sanctioned Amount</h3>
+                  <div className="stat-value" style={{ fontSize: "28px", fontWeight: "bold" }}>{formatCurrency(stats.myProjectsTotalSanctionedAmount)}</div>
                 </div>
-                <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#1f2937' }}>
-                  {formatCurrency(stats.myProjectsTotalSanctionedAmount)}
-                </div>
+                <i className="fas fa-rupee-sign text-success" style={{ fontSize: "24px", opacity: 0.8, alignSelf: 'flex-end' }}></i>
               </div>
             </div>
           )}
 
           {!loading && !error && stats && stats.myProjectsByStage && Object.keys(stats.myProjectsByStage).length > 0 && (
-            <div style={{ marginTop: '30px' }}>
-              <div className="office-card" style={{ padding: '20px' }}>
-                <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '18px', fontWeight: '600' }}>
-                  My Projects by Stage
-                </h3>
-                {renderBarChart(stats.myProjectsByStage, Math.max(...Object.values(stats.myProjectsByStage)))}
+            <div className="grid-container" style={{ marginTop: "30px" }}>
+              <div className="info-card">
+                <h3>My Projects by Stage</h3>
+                {renderBarChart(
+                  stats.myProjectsByStage,
+                  Math.max(...Object.values(stats.myProjectsByStage))
+                )}
               </div>
             </div>
           )}
 
-          <div style={{ marginTop: '30px' }}>
+          <div style={{ marginTop: "30px" }}>
             <NavLink to="/office-staff/projects">
-              <button className="btn-primary" style={{ padding: '12px 24px' }}>Go to Projects</button>
+              <button className="btn-primary">
+                Go to Projects
+              </button>
             </NavLink>
           </div>
         </section>

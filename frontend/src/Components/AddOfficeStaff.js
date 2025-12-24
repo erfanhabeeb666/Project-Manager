@@ -120,9 +120,8 @@ const AddOfficeStaff = ({ onSuccess }) => {
           onChange={handleChange}
           placeholder="Full Name"
           required
-          className="w-full p-2 border rounded"
         />
-        {errors.name && <p className="text-red-600 text-sm">{errors.name}</p>}
+        {errors.name && <p className="error-text">{errors.name}</p>}
         <input
           type="email"
           name="email"
@@ -130,9 +129,8 @@ const AddOfficeStaff = ({ onSuccess }) => {
           onChange={handleChange}
           placeholder="Email"
           required
-          className="w-full p-2 border rounded"
         />
-        {errors.email && <p className="text-red-600 text-sm">{errors.email}</p>}
+        {errors.email && <p className="error-text">{errors.email}</p>}
         <input
           type="password"
           name="password"
@@ -140,10 +138,9 @@ const AddOfficeStaff = ({ onSuccess }) => {
           onChange={handleChange}
           placeholder="Password"
           required
-          className="w-full p-2 border rounded"
         />
-        {errors.password && <p className="text-red-600 text-sm">{errors.password}</p>}
-         
+        {errors.password && <p className="error-text">{errors.password}</p>}
+
         <input
           type="tel"
           name="mobileNumber"
@@ -155,24 +152,23 @@ const AddOfficeStaff = ({ onSuccess }) => {
           maxLength={10}
           onInvalid={(e) => e.target.setCustomValidity('')}
           onInput={(e) => e.currentTarget.setCustomValidity('')}
-          className="w-full p-2 border rounded"
         />
-        {errors.mobileNumber && <p className="text-red-600 text-sm">{errors.phoneNumber}</p>}
+        {errors.mobileNumber && <p className="error-text">{errors.phoneNumber}</p>}
         <textarea
           name="adharUid"
           value={officeStaff.adharUid}
           onChange={handleChange}
           placeholder="AdharUid"
           required
-          className="w-full p-2 border rounded"
         />
-        {errors.adharUid && <p className="text-red-600 text-sm">{errors.adharUid}</p>}
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Submit
-        </button>
+        {errors.adharUid && <p className="error-text">{errors.adharUid}</p>}
+        <div className="form-actions full-width">
+          <button
+            type="submit"
+          >
+            Submit
+          </button>
+        </div>
       </form>
     </div>
   );
