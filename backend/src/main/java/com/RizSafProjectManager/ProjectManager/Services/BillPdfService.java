@@ -45,9 +45,13 @@ public class BillPdfService {
     }
 
     private void addHeader(Document document) throws DocumentException {
-        Font companyFont = FontFactory.getFont(FontFactory.TIMES_BOLD, 16);
+        // Colors
+        BaseColor companyColor = BaseColor.BLUE;
+        BaseColor detailsColor = new BaseColor(0, 0, 139); // Dark Blue
+
+        Font companyFont = FontFactory.getFont(FontFactory.TIMES_BOLD, 16, companyColor);
         Font subheaderFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10);
-        Font detailsFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10);
+        Font detailsFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, detailsColor);
 
         Paragraph companyName = new Paragraph("RIZ SAF LIGHTING SOLUTIONS", companyFont);
         companyName.setAlignment(Element.ALIGN_CENTER);
