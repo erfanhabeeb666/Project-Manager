@@ -293,6 +293,7 @@ const CreateBill = () => {
                                 </div>
                                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                                     <button
+                                        type="button"
                                         onClick={async () => {
                                             try {
                                                 const token = localStorage.getItem("jwtToken");
