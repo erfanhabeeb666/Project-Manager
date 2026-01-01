@@ -1,5 +1,6 @@
 package com.RizSafProjectManager.ProjectManager.Services;
 
+import com.RizSafProjectManager.ProjectManager.Enums.Company;
 import com.RizSafProjectManager.ProjectManager.Models.Bill;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
@@ -25,7 +26,9 @@ public class BillPdfService {
             Files.createDirectories(uploadPath);
         }
 
-        String fileName = "Invoice_" + bill.getInvoiceNumber() + ".pdf";
+        // Include company prefix in filename to avoid conflicts
+        String companyPrefix = bill.getCompany() == Company.RIZSAF_PVT_LTD ? "RPL_" : "RLS_";
+        String fileName = "Invoice_" + companyPrefix + bill.getInvoiceNumber() + ".pdf";
         String filePath = PDF_DIR + fileName;
 
         Document document = new Document(PageSize.A4);
@@ -33,7 +36,7 @@ public class BillPdfService {
 
         document.open();
 
-        addHeader(document);
+        addHeader(document, bill.getCompany());
         addTitle(document, "GST TAX INVOICE");
         addBillDetails(document, bill);
         addItemsTable(document, bill);
@@ -44,7 +47,7 @@ public class BillPdfService {
         return "/generated_bills/" + fileName;
     }
 
-    private void addHeader(Document document) throws DocumentException {
+    private void addHeader(Document document, Company company) throws DocumentException {
         // Colors
         BaseColor companyColor = BaseColor.BLUE;
         BaseColor detailsColor = new BaseColor(0, 0, 139); // Dark Blue
@@ -53,23 +56,41 @@ public class BillPdfService {
         Font subheaderFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10);
         Font detailsFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10, detailsColor);
 
-        Paragraph companyName = new Paragraph("RIZ SAF LIGHTING SOLUTIONS", companyFont);
+        Paragraph companyName = new Paragraph(company.getCompanyName(), companyFont);
         companyName.setAlignment(Element.ALIGN_CENTER);
         document.add(companyName);
 
-        Paragraph subheader = new Paragraph("(Approved by Department of Industries, Govt. of Kerala)", subheaderFont);
-        subheader.setAlignment(Element.ALIGN_CENTER);
-        document.add(subheader);
+        // Add subheader only if it exists for this company
+        if (company.getSubHeader() != null && !company.getSubHeader().isEmpty()) {
+            Paragraph subheader = new Paragraph(company.getSubHeader(), subheaderFont);
+            subheader.setAlignment(Element.ALIGN_CENTER);
+            document.add(subheader);
+        }
 
-        Paragraph details = new Paragraph(
-                "Edavetty P O, Thodupuzha, Idukki District, Kerala, Pin – 685588\n" +
-                        "MSME No: KL03A0000320\n" +
-                        "Electrical Contract License No: CB 6534\n" +
-                        "PWD Registration No: ELD/KKD/C/20\n" +
-                        "GSTN: 32BPNPS5199M3ZW\n" +
-                        "Phone: 04862 229227, Mobile: 9747463027\n" +
-                        "E-Mail: shajahanrassak@gmail.com",
-                detailsFont);
+        // Build details string dynamically
+        StringBuilder detailsBuilder = new StringBuilder();
+        detailsBuilder.append(company.getAddress()).append("\n");
+
+        if (company.getMsmeNo() != null && !company.getMsmeNo().isEmpty()) {
+            detailsBuilder.append("MSME No: ").append(company.getMsmeNo()).append("\n");
+        }
+        if (company.getElectricalLicenseNo() != null && !company.getElectricalLicenseNo().isEmpty()) {
+            detailsBuilder.append("Electrical Contract License No: ").append(company.getElectricalLicenseNo())
+                    .append("\n");
+        }
+        if (company.getPwdRegistrationNo() != null && !company.getPwdRegistrationNo().isEmpty()) {
+            detailsBuilder.append("PWD Registration No: ").append(company.getPwdRegistrationNo()).append("\n");
+        }
+
+        detailsBuilder.append("GSTN: ").append(company.getGstn()).append("\n");
+
+        if (company.getPhone() != null && !company.getPhone().isEmpty()) {
+            detailsBuilder.append("Phone: ").append(company.getPhone()).append(", ");
+        }
+        detailsBuilder.append("Mobile: ").append(company.getMobile()).append("\n");
+        detailsBuilder.append("E-Mail: ").append(company.getEmail());
+
+        Paragraph details = new Paragraph(detailsBuilder.toString(), detailsFont);
         details.setAlignment(Element.ALIGN_CENTER);
         details.setSpacingAfter(10);
         document.add(details);
@@ -214,6 +235,8 @@ public class BillPdfService {
     }
 
     private void addBankDetailsAndSign(Document document, Bill bill) throws DocumentException {
+        Company company = bill.getCompany();
+
         // Amount in Words
         Font boldFont = FontFactory.getFont(FontFactory.TIMES_BOLD, 10);
         Font normalFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10);
@@ -232,17 +255,17 @@ public class BillPdfService {
         PdfPCell bankCell = new PdfPCell();
         bankCell.setBorder(Rectangle.NO_BORDER);
         bankCell.addElement(new Paragraph("Bank Details:", boldFont));
-        bankCell.addElement(new Paragraph("Bank: State Bank of India", normalFont));
-        bankCell.addElement(new Paragraph("Branch: Karikode, Thodupuzha", normalFont));
-        bankCell.addElement(new Paragraph("A/C No: 67317760046", normalFont));
-        bankCell.addElement(new Paragraph("IFSC Code: SBIN0070886", normalFont));
+        bankCell.addElement(new Paragraph("Bank: " + company.getBankName(), normalFont));
+        bankCell.addElement(new Paragraph("Branch: " + company.getBankBranch(), normalFont));
+        bankCell.addElement(new Paragraph("A/C No: " + company.getAccountNo(), normalFont));
+        bankCell.addElement(new Paragraph("IFSC Code: " + company.getIfscCode(), normalFont));
         bankTable.addCell(bankCell);
 
         PdfPCell signCell = new PdfPCell();
         signCell.setBorder(Rectangle.NO_BORDER);
         signCell.setVerticalAlignment(Element.ALIGN_BOTTOM);
 
-        Paragraph forCompany = new Paragraph("\n\nFor RIZ SAF LIGHTING SOLUTIONS", boldFont);
+        Paragraph forCompany = new Paragraph("\n\nFor " + company.getCompanyName(), boldFont);
         forCompany.setAlignment(Element.ALIGN_RIGHT);
         signCell.addElement(forCompany);
 

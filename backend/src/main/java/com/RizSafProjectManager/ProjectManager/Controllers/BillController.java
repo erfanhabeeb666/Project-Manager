@@ -2,8 +2,8 @@ package com.RizSafProjectManager.ProjectManager.Controllers;
 
 import com.RizSafProjectManager.ProjectManager.Dtos.BillRequestDto;
 import com.RizSafProjectManager.ProjectManager.Dtos.BillResponseDto;
+import com.RizSafProjectManager.ProjectManager.Enums.Company;
 import com.RizSafProjectManager.ProjectManager.Models.Bill;
-import com.RizSafProjectManager.ProjectManager.Repos.BillRepository;
 import com.RizSafProjectManager.ProjectManager.Services.BillService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -28,13 +28,12 @@ import java.nio.file.Paths;
 public class BillController {
 
     private final BillService billService;
-    private final BillRepository billRepository;
 
     @PostMapping("/generate")
     @PreAuthorize("hasAuthority('OFFICE_STAFF')")
     public ResponseEntity<BillResponseDto> generateBill(@RequestBody BillRequestDto request) {
         BillResponseDto response = billService.generateBill(request);
-        response.setPdfUrl("/api/billing/" + response.getInvoiceNumber() + "/pdf");
+        response.setPdfUrl("/api/billing/" + response.getCompany().name() + "/" + response.getInvoiceNumber() + "/pdf");
         return ResponseEntity.ok(response);
     }
 
@@ -43,17 +42,25 @@ public class BillController {
     public ResponseEntity<Page<BillResponseDto>> getHistory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Company company) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        Page<BillResponseDto> bills = billService.getAllBills(search, pageable);
-        bills.forEach(b -> b.setPdfUrl("/api/billing/" + b.getInvoiceNumber() + "/pdf"));
+        Page<BillResponseDto> bills = billService.getAllBills(search, company, pageable);
+        bills.forEach(b -> b.setPdfUrl("/api/billing/" + b.getCompany().name() + "/" + b.getInvoiceNumber() + "/pdf"));
         return ResponseEntity.ok(bills);
     }
 
-    @GetMapping("/{invoiceNumber}/pdf")
-    public ResponseEntity<Resource> downloadPdf(@PathVariable String invoiceNumber) {
-        Bill bill = billRepository.findByInvoiceNumber(invoiceNumber)
-                .orElseThrow(() -> new RuntimeException("Bill not found"));
+    @GetMapping("/companies")
+    @PreAuthorize("hasAnyAuthority('OFFICE_STAFF', 'ADMIN')")
+    public ResponseEntity<Company[]> getCompanies() {
+        return ResponseEntity.ok(Company.values());
+    }
+
+    @GetMapping("/{company}/{invoiceNumber}/pdf")
+    public ResponseEntity<Resource> downloadPdf(
+            @PathVariable Company company,
+            @PathVariable String invoiceNumber) {
+        Bill bill = billService.findByCompanyAndInvoiceNumber(company, invoiceNumber);
 
         try {
             // pdfPath is like "/generated_bills/Invoice_00067.pdf"

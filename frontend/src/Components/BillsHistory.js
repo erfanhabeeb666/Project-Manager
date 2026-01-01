@@ -7,6 +7,12 @@ import "./Styles/Main.css";
 // import "./Styles/CreateBill.css"; // Reuse .bill-page-container etc - No longer needed
 import "./Styles/Sidebar.css";
 
+const COMPANIES = [
+    { value: "", label: "All Companies" },
+    { value: "RIZSAF_LIGHTING", label: "RIZ SAF Lighting Solutions" },
+    { value: "RIZSAF_PVT_LTD", label: "Rizsaf Private Limited" }
+];
+
 const BillsHistory = ({ role = "OFFICE_STAFF" }) => {
     const Sidebar = role === "ADMIN" ? AdminSidebar : OfficeSidebar;
 
@@ -15,6 +21,7 @@ const BillsHistory = ({ role = "OFFICE_STAFF" }) => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [search, setSearch] = useState("");
+    const [selectedCompany, setSelectedCompany] = useState("");
     const [error, setError] = useState("");
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -28,13 +35,19 @@ const BillsHistory = ({ role = "OFFICE_STAFF" }) => {
             const token = localStorage.getItem("jwtToken");
             const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8080/api/";
 
+            const params = {
+                page: pageNo,
+                size: 10,
+                search: search || null
+            };
+
+            if (selectedCompany) {
+                params.company = selectedCompany;
+            }
+
             const response = await axios.get(`${apiUrl}api/billing/history`, {
                 headers: { Authorization: `Bearer ${token}` },
-                params: {
-                    page: pageNo,
-                    size: 10,
-                    search: search || null
-                }
+                params
             });
 
             const data = response.data;
@@ -46,7 +59,7 @@ const BillsHistory = ({ role = "OFFICE_STAFF" }) => {
         } finally {
             setLoading(false);
         }
-    }, [search]);
+    }, [search, selectedCompany]);
 
     useEffect(() => {
         fetchBills(0);
@@ -60,6 +73,11 @@ const BillsHistory = ({ role = "OFFICE_STAFF" }) => {
     const handleLogout = () => {
         localStorage.removeItem("jwtToken");
         window.location.href = "/";
+    };
+
+    const getCompanyLabel = (companyValue) => {
+        const company = COMPANIES.find(c => c.value === companyValue);
+        return company ? company.label : companyValue;
     };
 
     return (
@@ -83,6 +101,17 @@ const BillsHistory = ({ role = "OFFICE_STAFF" }) => {
                 <div className="content-area">
                     <div className="card-header" style={{ background: 'white', padding: '20px', borderRadius: '12px', marginBottom: '20px', boxShadow: 'var(--shadow-sm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <select
+                                value={selectedCompany}
+                                onChange={(e) => setSelectedCompany(e.target.value)}
+                                style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ccc', minWidth: '200px', cursor: 'pointer' }}
+                            >
+                                {COMPANIES.map(company => (
+                                    <option key={company.value} value={company.value}>
+                                        {company.label}
+                                    </option>
+                                ))}
+                            </select>
                             <input
                                 type="text"
                                 placeholder="Search Invoice No (e.g. 00067)"
@@ -101,6 +130,7 @@ const BillsHistory = ({ role = "OFFICE_STAFF" }) => {
                         <table className="main-table">
                             <thead>
                                 <tr>
+                                    <th>Company</th>
                                     <th>Invoice No</th>
                                     <th>Date</th>
                                     <th>Customer</th>
@@ -111,15 +141,26 @@ const BillsHistory = ({ role = "OFFICE_STAFF" }) => {
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="5" style={{ textAlign: 'center', padding: '30px' }}>Loading...</td>
+                                        <td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>Loading...</td>
                                     </tr>
                                 ) : bills.length === 0 ? (
                                     <tr>
-                                        <td colSpan="5" style={{ textAlign: 'center', padding: '30px' }}>No bills found.</td>
+                                        <td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>No bills found.</td>
                                     </tr>
                                 ) : (
                                     bills.map(bill => (
                                         <tr key={bill.id}>
+                                            <td style={{ fontSize: '0.85rem' }}>
+                                                <span style={{
+                                                    padding: '4px 8px',
+                                                    borderRadius: '4px',
+                                                    backgroundColor: bill.company === 'RIZSAF_PVT_LTD' ? '#dcfce7' : '#dbeafe',
+                                                    color: bill.company === 'RIZSAF_PVT_LTD' ? '#166534' : '#1e40af',
+                                                    fontWeight: '500'
+                                                }}>
+                                                    {bill.company === 'RIZSAF_PVT_LTD' ? 'RPL' : 'RLS'}
+                                                </span>
+                                            </td>
                                             <td style={{ fontWeight: '600' }}>#{bill.invoiceNumber}</td>
                                             <td>{bill.invoiceDate}</td>
                                             <td>{bill.customerName}</td>

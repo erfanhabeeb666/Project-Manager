@@ -1,5 +1,6 @@
 package com.RizSafProjectManager.ProjectManager.Models;
 
+import com.RizSafProjectManager.ProjectManager.Enums.Company;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,8 +24,11 @@ public class Bill {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
-    private String invoiceNumber;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Company company;
+
+    private String invoiceNumber; // No longer unique globally, unique per company
 
     private LocalDate invoiceDate;
 

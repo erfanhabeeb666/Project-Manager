@@ -5,7 +5,13 @@ import { numberToWords } from "../utils/numberToWords";
 import { getDisplayName } from "../utils/auth";
 import "./Styles/CreateBill.css";
 
+const COMPANIES = [
+    { value: "RIZSAF_LIGHTING", label: "RIZ SAF Lighting Solutions" },
+    { value: "RIZSAF_PVT_LTD", label: "Rizsaf Private Limited" }
+];
+
 const CreateBill = () => {
+    const [selectedCompany, setSelectedCompany] = useState("RIZSAF_LIGHTING");
     const [customerName, setCustomerName] = useState("");
     const [customerAddress, setCustomerAddress] = useState("");
 
@@ -107,6 +113,7 @@ const CreateBill = () => {
             }));
 
             const payload = {
+                company: selectedCompany,
                 customerName,
                 customerAddress,
                 items: payloadItems
@@ -125,7 +132,6 @@ const CreateBill = () => {
             setLoading(false);
         }
     };
-
 
 
 
@@ -157,6 +163,26 @@ const CreateBill = () => {
 
                 <div className="bill-card">
                     <form onSubmit={handleSubmit}>
+                        <div className="bill-section">
+                            <h3 className="bill-section-title">Select Company</h3>
+                            <div className="input-field-container">
+                                <label className="input-label">Billing Company</label>
+                                <select
+                                    className="styled-input"
+                                    value={selectedCompany}
+                                    onChange={(e) => setSelectedCompany(e.target.value)}
+                                    required
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    {COMPANIES.map(company => (
+                                        <option key={company.value} value={company.value}>
+                                            {company.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
                         <div className="bill-section">
                             <h3 className="bill-section-title">Customer Details</h3>
                             <div className="input-group-row">
@@ -287,6 +313,9 @@ const CreateBill = () => {
                             <div className="success-area">
                                 <div style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem', color: '#065f46' }}>
                                     <i className="fas fa-check-circle"></i> Bill Generated Successfully!
+                                </div>
+                                <div style={{ marginBottom: '0.5rem' }}>
+                                    Company: <strong>{COMPANIES.find(c => c.value === successData.company)?.label || successData.companyName}</strong>
                                 </div>
                                 <div style={{ marginBottom: '1rem' }}>
                                     Invoice No: <strong>{successData.invoiceNumber}</strong>

@@ -2,6 +2,7 @@ package com.RizSafProjectManager.ProjectManager.Services;
 
 import com.RizSafProjectManager.ProjectManager.Dtos.BillRequestDto;
 import com.RizSafProjectManager.ProjectManager.Dtos.BillResponseDto;
+import com.RizSafProjectManager.ProjectManager.Enums.Company;
 import com.RizSafProjectManager.ProjectManager.Models.Bill;
 import com.RizSafProjectManager.ProjectManager.Repos.BillRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +24,12 @@ public class BillService {
     private final BillPdfService billPdfService;
 
     @Transactional
-
     public BillResponseDto generateBill(BillRequestDto request) {
+        // Default to RIZSAF_LIGHTING if no company specified
+        Company company = request.getCompany() != null ? request.getCompany() : Company.RIZSAF_LIGHTING;
+
         Bill bill = new Bill();
+        bill.setCompany(company);
         bill.setCustomerName(request.getCustomerName());
         bill.setCustomerAddress(request.getCustomerAddress());
         bill.setInvoiceDate(LocalDate.now());
@@ -68,8 +72,8 @@ public class BillService {
         // Amount in Word
         bill.setAmountInWords(amountInWordsService.convertToIndianCurrency(grandTotal.longValue()));
 
-        // Invoice Number
-        bill.setInvoiceNumber(generateNextInvoiceNumber());
+        // Invoice Number - now per company
+        bill.setInvoiceNumber(generateNextInvoiceNumber(company));
 
         // 3. Save initial state
         bill = billRepository.save(bill);
@@ -88,16 +92,31 @@ public class BillService {
         return mapToDto(bill);
     }
 
-    public Page<BillResponseDto> getAllBills(String search, Pageable pageable) {
+    public Page<BillResponseDto> getAllBills(String search, Company company, Pageable pageable) {
+        if (company != null) {
+            if (search != null && !search.isEmpty()) {
+                return billRepository.findByCompanyAndInvoiceNumberContainingIgnoreCase(company, search, pageable)
+                        .map(this::mapToDto);
+            }
+            return billRepository.findByCompany(company, pageable).map(this::mapToDto);
+        }
+
         if (search != null && !search.isEmpty()) {
             return billRepository.findByInvoiceNumberContainingIgnoreCase(search, pageable).map(this::mapToDto);
         }
         return billRepository.findAll(pageable).map(this::mapToDto);
     }
 
+    public Bill findByCompanyAndInvoiceNumber(Company company, String invoiceNumber) {
+        return billRepository.findByCompanyAndInvoiceNumber(company, invoiceNumber)
+                .orElseThrow(() -> new RuntimeException("Bill not found"));
+    }
+
     private BillResponseDto mapToDto(Bill bill) {
         BillResponseDto response = new BillResponseDto();
         response.setId(bill.getId());
+        response.setCompany(bill.getCompany());
+        response.setCompanyName(bill.getCompany().getCompanyName());
         response.setInvoiceNumber(bill.getInvoiceNumber());
         response.setInvoiceDate(bill.getInvoiceDate());
         response.setCustomerName(bill.getCustomerName());
@@ -106,8 +125,8 @@ public class BillService {
         return response;
     }
 
-    private synchronized String generateNextInvoiceNumber() {
-        String lastInvoice = billRepository.findLastInvoiceNumber();
+    private synchronized String generateNextInvoiceNumber(Company company) {
+        String lastInvoice = billRepository.findLastInvoiceNumberByCompany(company);
         if (lastInvoice == null) {
             return "00001";
         }
