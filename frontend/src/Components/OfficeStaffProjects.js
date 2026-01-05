@@ -117,6 +117,23 @@ const OfficeStaffProjects = () => {
   const [updateFormSuccess, setUpdateFormSuccess] = useState("");
   const [updateSubmitting, setUpdateSubmitting] = useState(false);
 
+  // Document management state
+  const [documents, setDocuments] = useState([]);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [documentsError, setDocumentsError] = useState("");
+  const [documentSearchTerm, setDocumentSearchTerm] = useState("");
+  const [showUploadDocumentModal, setShowUploadDocumentModal] = useState(false);
+  const [documentUploadForm, setDocumentUploadForm] = useState({
+    title: "",
+    description: "",
+    file: null,
+  });
+  const [documentUploading, setDocumentUploading] = useState(false);
+  const [documentUploadSuccess, setDocumentUploadSuccess] = useState("");
+  const [documentUploadError, setDocumentUploadError] = useState("");
+  const [viewingDocument, setViewingDocument] = useState(null);
+
+
   const authHeaders = () => {
     const token = localStorage.getItem("jwtToken");
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -548,6 +565,155 @@ const OfficeStaffProjects = () => {
     }
   };
 
+  // Document Management Functions
+  const fetchDocuments = useCallback(async (projectId, searchTerm = "") => {
+    if (!projectId) return;
+    requireAuth();
+    setDocumentsLoading(true);
+    setDocumentsError("");
+    try {
+      const params = searchTerm ? { search: searchTerm } : {};
+      const response = await axios.get(
+        `${apiUrl}office-staff/projects/${projectId}/documents`,
+        { headers: authHeaders(), params }
+      );
+      setDocuments(response.data?.data || []);
+    } catch (error) {
+      handleApiError(error, setDocumentsError);
+    } finally {
+      setDocumentsLoading(false);
+    }
+  }, [apiUrl, requireAuth, handleApiError]);
+
+  useEffect(() => {
+    if (selectedProjectId) {
+      fetchDocuments(selectedProjectId, documentSearchTerm);
+    } else {
+      setDocuments([]);
+    }
+  }, [selectedProjectId, fetchDocuments]);
+
+  const handleDocumentSearch = () => {
+    if (selectedProjectId) {
+      fetchDocuments(selectedProjectId, documentSearchTerm);
+    }
+  };
+
+  const handleDocumentSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleDocumentSearch();
+    }
+  };
+
+  const handleDocumentUploadFormChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "file") {
+      setDocumentUploadForm((prev) => ({ ...prev, file: files[0] || null }));
+    } else {
+      setDocumentUploadForm((prev) => ({ ...prev, [name]: value }));
+    }
+    setDocumentUploadError("");
+    setDocumentUploadSuccess("");
+  };
+
+  const submitDocumentUpload = async (e) => {
+    e.preventDefault();
+    if (!selectedProject) return;
+    if (!documentUploadForm.file) {
+      setDocumentUploadError("Please select a file to upload");
+      return;
+    }
+    requireAuth();
+    setDocumentUploading(true);
+    setDocumentUploadSuccess("");
+    setDocumentUploadError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", documentUploadForm.file);
+      if (documentUploadForm.title) {
+        formData.append("title", documentUploadForm.title);
+      }
+      if (documentUploadForm.description) {
+        formData.append("description", documentUploadForm.description);
+      }
+      await axios.post(
+        `${apiUrl}office-staff/projects/${selectedProject.id}/documents`,
+        formData,
+        {
+          headers: {
+            ...authHeaders(),
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      setDocumentUploadSuccess("Document uploaded successfully");
+      setDocumentUploadForm({ title: "", description: "", file: null });
+      setShowUploadDocumentModal(false);
+      await fetchDocuments(selectedProject.id, documentSearchTerm);
+    } catch (error) {
+      handleApiError(error, setDocumentUploadError);
+    } finally {
+      setDocumentUploading(false);
+    }
+  };
+
+  const downloadDocument = async (documentId, filename) => {
+    requireAuth();
+    try {
+      const response = await axios.get(
+        `${apiUrl}office-staff/documents/${documentId}/download`,
+        {
+          headers: authHeaders(),
+          responseType: "blob",
+        }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      handleApiError(error, setDocumentsError);
+    }
+  };
+
+  const deleteDocument = async (documentId) => {
+    if (!window.confirm("Are you sure you want to delete this document?")) {
+      return;
+    }
+    requireAuth();
+    try {
+      await axios.delete(
+        `${apiUrl}office-staff/documents/${documentId}`,
+        { headers: authHeaders() }
+      );
+      await fetchDocuments(selectedProject.id, documentSearchTerm);
+    } catch (error) {
+      handleApiError(error, setDocumentsError);
+    }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "—";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  };
+
+  const getFileIcon = (contentType) => {
+    if (!contentType) return "📄";
+    if (contentType.startsWith("image/")) return "🖼️";
+    if (contentType.includes("pdf")) return "📕";
+    if (contentType.includes("word") || contentType.includes("document")) return "📝";
+    if (contentType.includes("excel") || contentType.includes("spreadsheet")) return "📊";
+    if (contentType.includes("powerpoint") || contentType.includes("presentation")) return "📽️";
+    if (contentType.includes("zip") || contentType.includes("rar") || contentType.includes("archive")) return "🗜️";
+    return "📄";
+  };
+
   const formatCurrency = (value) => {
     if (value === null || value === undefined) return "-";
     return new Intl.NumberFormat("en-IN", {
@@ -975,6 +1141,14 @@ const OfficeStaffProjects = () => {
                   >
                     Add Expense
                   </button>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => setShowUploadDocumentModal(true)}
+                    style={{ padding: '12px 24px' }}
+                  >
+                    📤 Upload Document
+                  </button>
                 </div>
 
                 <div className="actions-section">
@@ -1102,6 +1276,185 @@ const OfficeStaffProjects = () => {
                     <p className="muted-text">
                       No expenses recorded for this project.
                     </p>
+                  )}
+                </div>
+
+                {/* Project Documents Section */}
+                <div className="actions-section">
+                  <div className="actions-header">
+                    <h4>📁 Project Documents</h4>
+                    <span className="muted-text">
+                      {documents?.length || 0} document(s)
+                    </span>
+                  </div>
+
+                  {/* Document Search and Upload Controls */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    marginBottom: '16px',
+                    flexWrap: 'wrap',
+                    alignItems: 'flex-end'
+                  }}>
+                    <div style={{ flex: '1', minWidth: '200px' }}>
+                      <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#374151' }}>
+                        Search Documents
+                      </label>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <input
+                          type="text"
+                          placeholder="Search by title, filename, or description..."
+                          value={documentSearchTerm}
+                          onChange={(e) => setDocumentSearchTerm(e.target.value)}
+                          onKeyPress={handleDocumentSearchKeyPress}
+                          style={{
+                            flex: '1',
+                            padding: '10px 14px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '8px',
+                            fontSize: '14px'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="btn-outline"
+                          onClick={handleDocumentSearch}
+                          style={{ padding: '10px 16px' }}
+                        >
+                          🔍 Search
+                        </button>
+                        {documentSearchTerm && (
+                          <button
+                            type="button"
+                            className="btn-cancel"
+                            onClick={() => {
+                              setDocumentSearchTerm("");
+                              fetchDocuments(selectedProject.id, "");
+                            }}
+                            style={{ padding: '10px 16px' }}
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => setShowUploadDocumentModal(true)}
+                      style={{ padding: '10px 20px', whiteSpace: 'nowrap' }}
+                    >
+                      📤 Upload Document
+                    </button>
+                  </div>
+
+                  {documentsError && (
+                    <p className="error-text" style={{ marginBottom: '12px' }}>{documentsError}</p>
+                  )}
+
+                  {documentsLoading ? (
+                    <p className="muted-text">Loading documents...</p>
+                  ) : documents.length > 0 ? (
+                    <div className="actions-table-wrapper">
+                      <table className="main-table">
+                        <thead>
+                          <tr>
+                            <th style={{ width: '40px' }}></th>
+                            <th>Title</th>
+                            <th>Filename</th>
+                            <th>Size</th>
+                            <th>Uploaded By</th>
+                            <th>Uploaded At</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {documents.map((doc) => (
+                            <tr key={doc.id}>
+                              <td style={{ fontSize: '20px', textAlign: 'center' }}>
+                                {getFileIcon(doc.contentType)}
+                              </td>
+                              <td>
+                                <div>
+                                  <strong>{doc.title}</strong>
+                                  {doc.description && (
+                                    <p className="muted-text" style={{ fontSize: '12px', margin: '4px 0 0 0' }}>
+                                      {doc.description.length > 50
+                                        ? doc.description.substring(0, 50) + '...'
+                                        : doc.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </td>
+                              <td style={{ fontSize: '13px', color: '#6b7280' }}>
+                                {doc.originalFilename}
+                              </td>
+                              <td>{formatFileSize(doc.fileSize)}</td>
+                              <td>{doc.uploadedByName || "—"}</td>
+                              <td>
+                                {doc.uploadedAt
+                                  ? new Date(doc.uploadedAt).toLocaleDateString("en-IN", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  })
+                                  : "—"}
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <button
+                                    type="button"
+                                    className="btn-small"
+                                    onClick={() => downloadDocument(doc.id, doc.originalFilename)}
+                                    title="Download"
+                                  >
+                                    ⬇️ Download
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn-small btn-outline"
+                                    onClick={() => setViewingDocument(doc)}
+                                    title="View Details"
+                                  >
+                                    👁️
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn-cancel"
+                                    onClick={() => deleteDocument(doc.id)}
+                                    title="Delete"
+                                    style={{ padding: '6px 10px', fontSize: '13px' }}
+                                  >
+                                    🗑️
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{
+                      padding: '40px',
+                      textAlign: 'center',
+                      background: '#f9fafb',
+                      borderRadius: '12px',
+                      border: '2px dashed #e5e7eb'
+                    }}>
+                      <p style={{ fontSize: '48px', marginBottom: '12px' }}>📂</p>
+                      <p className="muted-text">
+                        No documents uploaded yet.
+                      </p>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => setShowUploadDocumentModal(true)}
+                        style={{ marginTop: '16px', padding: '10px 24px' }}
+                      >
+                        📤 Upload First Document
+                      </button>
+                    </div>
                   )}
                 </div>
               </>
@@ -1576,6 +1929,246 @@ const OfficeStaffProjects = () => {
                 type="button"
                 className="btn-cancel"
                 onClick={() => setViewingExpense(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Document Modal */}
+      {showUploadDocumentModal && (
+        <div className="modal-overlay" onClick={() => setShowUploadDocumentModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <form onSubmit={submitDocumentUpload}>
+              <h3>📤 Upload Document</h3>
+              <p className="muted-text" style={{ marginBottom: '20px' }}>
+                Upload documents related to project: <strong>{selectedProject?.name}</strong>
+              </p>
+
+              {documentUploadError && (
+                <p className="error-text">{documentUploadError}</p>
+              )}
+              {documentUploadSuccess && (
+                <p className="success-text">{documentUploadSuccess}</p>
+              )}
+
+              <label style={{ display: 'block', marginBottom: '16px' }}>
+                Document Title
+                <input
+                  type="text"
+                  name="title"
+                  value={documentUploadForm.title}
+                  onChange={handleDocumentUploadFormChange}
+                  placeholder="Enter a descriptive title (optional)"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    marginTop: '6px'
+                  }}
+                />
+                <span className="muted-text" style={{ fontSize: '12px' }}>
+                  If left empty, the filename will be used as title
+                </span>
+              </label>
+
+              <label style={{ display: 'block', marginBottom: '16px' }}>
+                Description
+                <textarea
+                  name="description"
+                  value={documentUploadForm.description}
+                  onChange={handleDocumentUploadFormChange}
+                  placeholder="Optional description of the document"
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    marginTop: '6px',
+                    resize: 'vertical'
+                  }}
+                />
+              </label>
+
+              <label style={{ display: 'block', marginBottom: '20px' }}>
+                Select File *
+                <div style={{
+                  marginTop: '8px',
+                  padding: '30px',
+                  border: '2px dashed #d1d5db',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  background: '#f9fafb',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}>
+                  <input
+                    type="file"
+                    name="file"
+                    onChange={handleDocumentUploadFormChange}
+                    style={{ display: 'none' }}
+                    id="document-file-input"
+                  />
+                  <label htmlFor="document-file-input" style={{ cursor: 'pointer' }}>
+                    {documentUploadForm.file ? (
+                      <div>
+                        <p style={{ fontSize: '24px', marginBottom: '8px' }}>
+                          {getFileIcon(documentUploadForm.file.type)}
+                        </p>
+                        <p style={{ fontWeight: '500', color: '#374151' }}>
+                          {documentUploadForm.file.name}
+                        </p>
+                        <p className="muted-text" style={{ fontSize: '13px' }}>
+                          {formatFileSize(documentUploadForm.file.size)}
+                        </p>
+                        <p className="muted-text" style={{ fontSize: '12px', marginTop: '8px' }}>
+                          Click to change file
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p style={{ fontSize: '36px', marginBottom: '8px' }}>📁</p>
+                        <p style={{ fontWeight: '500', color: '#374151' }}>
+                          Click to select a file
+                        </p>
+                        <p className="muted-text" style={{ fontSize: '13px' }}>
+                          Supports PDF, Word, Excel, Images, and more (max 50MB)
+                        </p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </label>
+
+              <div className="form-actions">
+                <button type="submit" disabled={documentUploading}>
+                  {documentUploading ? "Uploading..." : "📤 Upload Document"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => {
+                    setShowUploadDocumentModal(false);
+                    setDocumentUploadForm({ title: "", description: "", file: null });
+                    setDocumentUploadError("");
+                    setDocumentUploadSuccess("");
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Document Details Modal */}
+      {viewingDocument && (
+        <div className="modal-overlay" onClick={() => setViewingDocument(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <h3>📄 Document Details</h3>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              padding: '20px',
+              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+              borderRadius: '12px',
+              marginBottom: '20px'
+            }}>
+              <span style={{ fontSize: '48px' }}>
+                {getFileIcon(viewingDocument.contentType)}
+              </span>
+              <div>
+                <h4 style={{ margin: '0 0 4px 0' }}>{viewingDocument.title}</h4>
+                <p className="muted-text" style={{ margin: 0, fontSize: '13px' }}>
+                  {viewingDocument.originalFilename}
+                </p>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px',
+              marginBottom: '20px'
+            }}>
+              <div>
+                <p className="muted-text" style={{ fontSize: '12px', marginBottom: '4px' }}>FILE SIZE</p>
+                <p style={{ margin: 0, fontWeight: '500' }}>{formatFileSize(viewingDocument.fileSize)}</p>
+              </div>
+              <div>
+                <p className="muted-text" style={{ fontSize: '12px', marginBottom: '4px' }}>FILE TYPE</p>
+                <p style={{ margin: 0, fontWeight: '500' }}>{viewingDocument.contentType || "Unknown"}</p>
+              </div>
+              <div>
+                <p className="muted-text" style={{ fontSize: '12px', marginBottom: '4px' }}>UPLOADED BY</p>
+                <p style={{ margin: 0, fontWeight: '500' }}>{viewingDocument.uploadedByName || "—"}</p>
+              </div>
+              <div>
+                <p className="muted-text" style={{ fontSize: '12px', marginBottom: '4px' }}>UPLOADED AT</p>
+                <p style={{ margin: 0, fontWeight: '500' }}>
+                  {viewingDocument.uploadedAt
+                    ? new Date(viewingDocument.uploadedAt).toLocaleString("en-IN", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                    : "—"}
+                </p>
+              </div>
+            </div>
+
+            {viewingDocument.description && (
+              <div style={{ marginBottom: '20px' }}>
+                <p className="muted-text" style={{ fontSize: '12px', marginBottom: '4px' }}>DESCRIPTION</p>
+                <p style={{
+                  margin: 0,
+                  padding: '12px',
+                  background: '#f9fafb',
+                  borderRadius: '8px',
+                  whiteSpace: 'pre-wrap'
+                }}>
+                  {viewingDocument.description}
+                </p>
+              </div>
+            )}
+
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => {
+                  downloadDocument(viewingDocument.id, viewingDocument.originalFilename);
+                }}
+                style={{ padding: '10px 20px' }}
+              >
+                ⬇️ Download
+              </button>
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to delete this document?")) {
+                    deleteDocument(viewingDocument.id);
+                    setViewingDocument(null);
+                  }
+                }}
+                style={{ color: '#dc2626' }}
+              >
+                🗑️ Delete
+              </button>
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => setViewingDocument(null)}
               >
                 Close
               </button>
