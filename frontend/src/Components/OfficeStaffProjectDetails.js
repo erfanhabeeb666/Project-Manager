@@ -729,6 +729,14 @@ const OfficeStaffProjectDetails = () => {
                                     >
                                         📤 Upload Document
                                     </button>
+                                    <button
+                                        type="button"
+                                        className="btn-primary"
+                                        style={{ backgroundColor: "#2ecc71" }}
+                                        onClick={() => navigate(`/office-staff/projects/${project.id}/locations`)}
+                                    >
+                                        📍 Manage Locations
+                                    </button>
                                 </div>
                             </div>
 

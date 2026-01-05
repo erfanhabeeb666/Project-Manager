@@ -5,6 +5,7 @@ import Admin from "./Components/Admin";
 import OfficeStaff from "./Components/OfficeStaff";
 import OfficeStaffProjects from "./Components/OfficeStaffProjects";
 import OfficeStaffProjectDetails from "./Components/OfficeStaffProjectDetails";
+import OfficeStaffProjectLocations from "./Components/OfficeStaffProjectLocations";
 import OfficeStaffDailyActions from "./Components/OfficeStaffDailyActions";
 import AdminOfficeStaff from "./Components/AdminOfficeStaff";
 import AdminWorker from "./Components/AdminWorker";
@@ -25,6 +26,7 @@ const App = () => {
                 <Route path="/office-staff" element={<OfficeStaff />} />
                 <Route path="/office-staff/projects" element={<OfficeStaffProjects />} />
                 <Route path="/office-staff/projects/:projectId" element={<OfficeStaffProjectDetails />} />
+                <Route path="/office-staff/projects/:projectId/locations" element={<OfficeStaffProjectLocations />} />
                 <Route path="/office-staff/daily-actions" element={<OfficeStaffDailyActions />} />
                 <Route path="/office-staff/create-bill" element={<CreateBill />} />
                 <Route path="/office-staff/bills-history" element={<BillsHistory role="OFFICE_STAFF" />} />

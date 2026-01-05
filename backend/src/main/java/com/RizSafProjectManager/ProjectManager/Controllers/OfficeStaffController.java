@@ -12,6 +12,7 @@ import com.RizSafProjectManager.ProjectManager.Repos.WorkerRepository;
 import com.RizSafProjectManager.ProjectManager.Services.ExpenseService;
 import com.RizSafProjectManager.ProjectManager.Services.ProjectService;
 import com.RizSafProjectManager.ProjectManager.Services.ProjectDocumentService;
+import com.RizSafProjectManager.ProjectManager.Services.SiteLocationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
@@ -37,17 +38,20 @@ public class OfficeStaffController {
         private final ExpenseService expenseService;
         private final WorkerRepository workerRepository;
         private final ProjectDocumentService documentService;
+        private final SiteLocationService siteLocationService;
         private final HttpServletRequest request;
         private final JwtUtils jwtUtils;
         private final JwtService jwtService;
 
         public OfficeStaffController(ProjectService projectService, ExpenseService expenseService,
                         WorkerRepository workerRepository, ProjectDocumentService documentService,
+                        SiteLocationService siteLocationService,
                         HttpServletRequest request, JwtUtils jwtUtils, JwtService jwtService) {
                 this.projectService = projectService;
                 this.expenseService = expenseService;
                 this.workerRepository = workerRepository;
                 this.documentService = documentService;
+                this.siteLocationService = siteLocationService;
                 this.request = request;
                 this.jwtUtils = jwtUtils;
                 this.jwtService = jwtService;
@@ -321,6 +325,42 @@ public class OfficeStaffController {
                 return ResponseEntity.ok(ApiResponse.<Void>builder()
                                 .success(true)
                                 .message("Document deleted successfully")
+                                .build());
+        }
+
+        // Site Location Endpoints
+
+        @PostMapping("/projects/{projectId}/locations")
+        public ResponseEntity<ApiResponse<SiteLocationResponseDto>> createLocation(
+                        @PathVariable Long projectId,
+                        @Valid @RequestBody SiteLocationRequestDto dto) {
+                var location = siteLocationService.createLocation(projectId, dto);
+                return ResponseEntity.created(
+                                URI.create("/office-staff/projects/" + projectId + "/locations/" + location.getId()))
+                                .body(ApiResponse.<SiteLocationResponseDto>builder()
+                                                .success(true)
+                                                .message("Location added successfully")
+                                                .data(location)
+                                                .build());
+        }
+
+        @GetMapping("/projects/{projectId}/locations")
+        public ResponseEntity<ApiResponse<List<SiteLocationResponseDto>>> getProjectLocations(
+                        @PathVariable Long projectId) {
+                var locations = siteLocationService.getLocationsByProject(projectId);
+                return ResponseEntity.ok(ApiResponse.<List<SiteLocationResponseDto>>builder()
+                                .success(true)
+                                .message("Locations fetched")
+                                .data(locations)
+                                .build());
+        }
+
+        @DeleteMapping("/locations/{locationId}")
+        public ResponseEntity<ApiResponse<Void>> deleteLocation(@PathVariable Long locationId) {
+                siteLocationService.deleteLocation(locationId);
+                return ResponseEntity.ok(ApiResponse.<Void>builder()
+                                .success(true)
+                                .message("Location deleted successfully")
                                 .build());
         }
 }
